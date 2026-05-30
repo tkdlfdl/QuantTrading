@@ -69,6 +69,63 @@ def ingest_batch(
     return results
 
 
+def ingest_universe(
+    symbols: list[str],
+    interval: str = "1d",
+    start: str = None,
+    end: str = None,
+    chunk_size: int = 100,
+) -> int:
+    """
+    Efficiently ingest a large universe using batch yfinance downloads.
+    Downloads chunk_size tickers at once instead of one per API call.
+    Returns total rows inserted.
+    """
+    conn = get_conn()
+    chunks = [symbols[i:i + chunk_size] for i in range(0, len(symbols), chunk_size)]
+    total_inserted = 0
+
+    for idx, chunk in enumerate(chunks):
+        print(f"  Chunk {idx + 1}/{len(chunks)}: downloading {len(chunk)} tickers...", end=" ", flush=True)
+        try:
+            df = _fetcher.fetch_batch(chunk, interval, start, end)
+            if df.empty:
+                print("no data")
+                continue
+
+            conn.register("_staging", df)
+
+            placeholders = ", ".join(["?" for _ in chunk])
+            before = conn.execute(
+                f"SELECT COUNT(*) FROM ohlcv WHERE interval = ? AND symbol IN ({placeholders})",
+                [interval] + chunk,
+            ).fetchone()[0]
+
+            conn.execute("""
+                INSERT INTO ohlcv
+                SELECT s.*
+                FROM _staging s
+                LEFT JOIN ohlcv o
+                       ON o.ts = s.ts AND o.symbol = s.symbol AND o.interval = s.interval
+                WHERE o.ts IS NULL
+            """)
+
+            after = conn.execute(
+                f"SELECT COUNT(*) FROM ohlcv WHERE interval = ? AND symbol IN ({placeholders})",
+                [interval] + chunk,
+            ).fetchone()[0]
+
+            inserted = after - before
+            total_inserted += inserted
+            conn.unregister("_staging")
+            print(f"{inserted:,} rows inserted")
+
+        except Exception as exc:
+            print(f"ERROR: {exc}")
+
+    return total_inserted
+
+
 def export_parquet(symbol: str, interval: str) -> str:
     """Export one symbol+interval to a parquet file and return its path."""
     from config.settings import PARQUET_DIR

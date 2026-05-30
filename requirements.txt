@@ -1,4 +1,5 @@
 duckdb>=0.10.0
+lxml>=5.0.0
 yfinance>=0.2.40
 pandas>=2.0.0
 numpy>=1.26.0
