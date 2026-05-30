@@ -58,8 +58,8 @@ def run_reddit_sentiment_bubble(
 
     # Grid search parameters
     holding_period_grid: list = [5, 10, 20, 40],
-    short_threshold_grid: list = [0.5, 0.6, 0.7],
-    long_threshold_grid:  list = [-0.5, -0.6, -0.7],
+    short_threshold_grid: list = [0.5, 0.6, 0.7, 0.8, 0.9],
+    long_threshold_grid:  list = [-0.5, -0.6, -0.7, -0.8, -0.9],
     top_n_grid:           list = [5, 10, 20],
     ma_window_grid:       list = [30, 60],
     z_window_grid:        list = [60, 120],
