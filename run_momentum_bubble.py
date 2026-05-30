@@ -15,7 +15,7 @@ from data.loader import load_close_panel
 from strategies.momentum_bubble_hedge import run_momentum_bubble_hedge_and_low_bubble_leverage
 
 # Always-present extras: index ETFs for buy-hold comparison + VIX for hedging
-EXTRAS = ["QQQ", "SPY", "^VIX"]
+EXTRAS = ["QQQ", "SPY", "^VIX", "UVXY"]
 START  = "1998-01-01"
 
 if __name__ == "__main__":
@@ -62,7 +62,16 @@ if __name__ == "__main__":
         wealth_df,
         ret_df,
         grid_result_df,
-        *_
+        best_return_decomposition,
+        best_decomposition_wealth,
+        best_hedge_exposure,
+        best_leverage_exposure,
+        best_bubble_score,
+        best_hedge_signal,
+        best_leverage_signal,
+        best_treasury_bubble_df,
+        best_signal_treasury_snapshot,
+        hedge_source_series,
     ) = run_momentum_bubble_hedge_and_low_bubble_leverage(
         df,
         lookback=140,
