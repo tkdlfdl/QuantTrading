@@ -82,16 +82,16 @@ def run_reddit_sentiment_bubble(
     sent  = sentiment_panel.loc[common_dates]
     price = price_panel.loc[common_dates]
 
-    # Only keep symbols with enough total mentions (non-zero sentiment days)
-    active_symbols = (sent != 0).sum()[lambda s: s >= min_mentions].index.tolist()
-    # Must also be in price panel
-    active_symbols = [s for s in active_symbols if s in price.columns]
-    print(f"Symbols with sufficient sentiment data: {len(active_symbols)}")
-
+    # Candidate symbols present in both panels
+    active_symbols = [s for s in sent.columns if s in price.columns]
     sent  = sent[active_symbols]
     price = price[active_symbols]
 
-    # Daily price returns
+    # Cumulative mention counts per symbol over time (used for live universe filter)
+    # sent != 0 means that day had at least one post mentioning the symbol
+    cumulative_mentions = (sent != 0).cumsum()
+
+    # Daily price returns — computed once, no lookahead (pct_change is backward-looking)
     price_ret = price.pct_change().ffill().fillna(0)
 
     grid_results = []
@@ -110,38 +110,56 @@ def run_reddit_sentiment_bubble(
         holding_period_grid, short_threshold_grid, long_threshold_grid,
         top_n_grid, ma_window_grid, z_window_grid, sentiment_scale_grid,
     ):
-        # ── Compute bubble score for each symbol ───────────────────────────
-        bubble_scores = pd.DataFrame(index=common_dates, columns=active_symbols, dtype=float)
-
+        # ── Compute bubble scores (all backward-looking rolling stats) ────────
+        bubble_scores_raw = pd.DataFrame(index=common_dates, columns=active_symbols, dtype=float)
         for sym in active_symbols:
             price_idx = sentiment_to_price_index(sent[sym], scale=sent_scale)
-            bubble_scores[sym] = calculate_bubble_score_proxy(
+            bubble_scores_raw[sym] = calculate_bubble_score_proxy(
                 price_idx, ma_window=ma_window, z_window=z_window
             )
 
+        # NO-LOOKAHEAD: shift scores by 1 day so that:
+        #   signal_scores.loc[T] = bubble score computed at END of day T-1
+        #   → signal known BEFORE market open on day T
+        #   → trade executes at OPEN of day T (using day T's return)
+        # Rule: "after signal detected → buy/sell NEXT day"
+        signal_scores = bubble_scores_raw.shift(1)
+
         # ── Generate daily returns ─────────────────────────────────────────
         daily_returns = []
+        warmup = z_window + ma_window + 1  # +1 for the shift
 
-        for i in range(z_window + ma_window, len(common_dates) - 1, holding_period):
+        for i in range(warmup, len(common_dates) - holding_period, holding_period):
             signal_date = common_dates[i]
-            scores_today = bubble_scores.loc[signal_date].dropna()
 
-            short_candidates = scores_today[scores_today >  short_thresh].nlargest(top_n)
-            long_candidates  = scores_today[scores_today <  long_thresh].nsmallest(top_n)
+            # Universe filter: only include symbols that had >= min_mentions
+            # posts UP TO (and not including) signal_date → no lookahead in universe
+            eligible = cumulative_mentions.loc[common_dates[i - 1]]
+            eligible = eligible[eligible >= min_mentions].index
+            scores = signal_scores.loc[signal_date, eligible].dropna()
 
-            hold_end = min(i + holding_period, len(common_dates) - 1)
+            if scores.empty:
+                continue
 
-            for j in range(i + 1, hold_end + 1):
+            short_candidates = scores[scores >  short_thresh].nlargest(top_n)
+            long_candidates  = scores[scores <  long_thresh].nsmallest(top_n)
+
+            # Trade from day i (signal was from day i-1 via shift)
+            # price_ret[i] = (close_i - close_{i-1}) / close_{i-1}
+            # → captures return of the day AFTER the signal date
+            hold_end = min(i + holding_period, len(common_dates))
+
+            for j in range(i, hold_end):
                 trade_date = common_dates[j]
                 ret = 0.0
 
                 if len(long_candidates) > 0:
                     long_ret = price_ret.loc[trade_date, long_candidates.index].mean()
-                    ret += long_ret * 0.5   # 50% long leg
+                    ret += long_ret * 0.5
 
                 if len(short_candidates) > 0:
                     short_ret = -price_ret.loc[trade_date, short_candidates.index].mean()
-                    ret += short_ret * 0.5  # 50% short leg
+                    ret += short_ret * 0.5
 
                 daily_returns.append({"date": trade_date, "ret": ret})
 
@@ -210,7 +228,7 @@ def run_reddit_sentiment_bubble(
     axes[0].legend()
     axes[0].grid(True)
 
-    # Sample bubble scores for top symbol by mention count
+    # Sample bubble scores for top symbol by mention count (shifted — same as signal)
     sample_sym = (sent != 0).sum().idxmax()
     sample_price_idx = sentiment_to_price_index(
         sent[sample_sym],
@@ -220,7 +238,7 @@ def run_reddit_sentiment_bubble(
         sample_price_idx,
         ma_window=best_params["ma_window"],
         z_window=best_params["z_window"],
-    )
+    ).shift(1)  # match signal_scores shift
     axes[1].plot(sample_bubble.index, sample_bubble.values, label=f"Sentiment Bubble Score: {sample_sym}")
     axes[1].axhline(best_params["short_threshold"], linestyle="--", color="red",  label="Short threshold")
     axes[1].axhline(best_params["long_threshold"],  linestyle="--", color="green", label="Long threshold")
