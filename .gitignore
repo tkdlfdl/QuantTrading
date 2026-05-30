@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Data (large files — not committed)
+data/market_data.duckdb
+data/market_data.duckdb.wal
+data/cache/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets / API keys
+.env
+secrets.json
+
+# Claude Code
+.claude/
