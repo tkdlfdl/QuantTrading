@@ -26,41 +26,26 @@ import requests
 from io import StringIO
 
 from data.db.schema import init
+from data.universe import get_reddit_universe, get_top_by_marketcap, get_universe
 from data.sentiment.reddit_fetcher import fetch_all, _make_reddit, SUBREDDITS
 from data.sentiment.aggregator import store_posts, aggregate_daily, load_sentiment_panel
 from strategies.reddit_sentiment_bubble import run_reddit_sentiment_bubble
 
 # ── Reddit API credentials ─────────────────────────────────────────────────
-# Get these from https://www.reddit.com/prefs/apps (create a "script" app)
 REDDIT_CLIENT_ID     = os.getenv("REDDIT_CLIENT_ID",     "YOUR_CLIENT_ID")
 REDDIT_CLIENT_SECRET = os.getenv("REDDIT_CLIENT_SECRET", "YOUR_CLIENT_SECRET")
 REDDIT_USER_AGENT    = os.getenv("REDDIT_USER_AGENT",    "QuantTrading/1.0")
 
-SENTIMENT_START = "2020-01-01"    # how far back to fetch Reddit posts
-PRICE_START     = "2020-01-01"    # price data start for backtest
-MIN_MENTIONS    = 10              # skip tickers with fewer total posts
+SENTIMENT_START = "2020-01-01"
+PRICE_START     = "2020-01-01"
+MIN_MENTIONS    = 10
 
-
-def get_universe() -> list[str]:
-    HEADERS = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        "Accept-Language": "en-US,en;q=0.9",
-    }
-    session = requests.Session()
-    session.headers.update(HEADERS)
-
-    def scrape(url, col):
-        html = session.get(url, timeout=20)
-        for t in pd.read_html(StringIO(html.text)):
-            if col in t.columns:
-                return t[col].dropna().astype(str).str.strip().str.replace(".", "-", regex=False).unique().tolist()
-        return []
-
-    sp500     = scrape("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies", "Symbol")
-    nasdaq100 = scrape("https://en.wikipedia.org/wiki/Nasdaq-100", "Ticker")
-    combined  = sorted(set(sp500 + nasdaq100))
-    print(f"Universe: {len(combined)} tickers (S&P 500 + NASDAQ 100)")
-    return combined
+# ── Universe mode ──────────────────────────────────────────────────────────
+# "reddit"   → NASDAQ100 + WSB classics   (~120 tickers, ~30-45 min)  ← default
+# "top100"   → top 100 by market cap      (~100 tickers, ~25-35 min)
+# "top50"    → top 50 by market cap       (~50  tickers, ~15-20 min)
+# "full"     → NASDAQ100 + S&P500         (~516 tickers, ~2-5 hrs)
+UNIVERSE_MODE = "reddit"
 
 
 def step1_fetch_sentiment(symbols: list[str], reddit) -> None:
@@ -142,9 +127,21 @@ def step4_backtest(symbols: list[str], price_panel: pd.DataFrame) -> None:
     print(grid_df[cols].head(10).to_string(index=False))
 
 
+def build_universe() -> list[str]:
+    if UNIVERSE_MODE == "reddit":
+        return get_reddit_universe()
+    elif UNIVERSE_MODE == "top100":
+        return get_top_by_marketcap(get_universe(), n=100)
+    elif UNIVERSE_MODE == "top50":
+        return get_top_by_marketcap(get_universe(), n=50)
+    else:  # "full"
+        return get_universe()
+
+
 if __name__ == "__main__":
     init()
-    symbols = get_universe()
+    symbols = build_universe()
+    print(f"Universe mode: {UNIVERSE_MODE} → {len(symbols)} tickers\n")
 
     # Validate credentials before starting long fetch
     if REDDIT_CLIENT_ID == "YOUR_CLIENT_ID":
