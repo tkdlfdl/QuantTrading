@@ -16,7 +16,7 @@ from strategies.momentum_bubble_hedge import run_momentum_bubble_hedge_and_low_b
 
 # Always-present extras: index ETFs for buy-hold comparison + VIX for hedging
 EXTRAS = ["QQQ", "SPY", "^VIX"]
-START  = "2015-01-01"
+START  = "1998-01-01"
 
 if __name__ == "__main__":
     init()
