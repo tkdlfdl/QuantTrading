@@ -45,7 +45,7 @@ MIN_MENTIONS    = 10
 # "top100"   → top 100 by market cap      (~100 tickers, ~25-35 min)
 # "top50"    → top 50 by market cap       (~50  tickers, ~15-20 min)
 # "full"     → NASDAQ100 + S&P500         (~516 tickers, ~2-5 hrs)
-UNIVERSE_MODE = "reddit"
+UNIVERSE_MODE = "top50"
 
 
 def step1_fetch_sentiment(symbols: list[str], reddit) -> None:
