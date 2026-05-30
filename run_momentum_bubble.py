@@ -77,7 +77,7 @@ if __name__ == "__main__":
         lookback=140,
         holding_period=40,
         LongShort_flag=True,
-        top=20,                          # larger top-N for bigger universe
+        top=5,
         bubble_indicator_grid=["QQQ", "SPY", "Momentum"],
         ma_window_grid=[120],
         z_window_grid=[240],
