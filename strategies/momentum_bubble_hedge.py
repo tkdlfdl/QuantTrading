@@ -142,7 +142,7 @@ def run_momentum_bubble_hedge_and_low_bubble_leverage(
                 long_ret = long_signal.mul(
                     np.array(ret_daily_df.iloc[:, ranked_idx[:long_num]].iloc[j:j + 1])[0]
                 )
-                long_part = np.mean(long_ret, axis=1)[0] * long_num
+                long_part = np.mean(long_ret, axis=1).iloc[0] * long_num
 
             if LongShort_flag and short_num > 0:
                 short_signal = (
@@ -153,7 +153,7 @@ def run_momentum_bubble_hedge_and_low_bubble_leverage(
                 short_ret = short_signal.mul(
                     np.array(ret_daily_df.iloc[:, ranked_idx[-short_num:]].iloc[j:j + 1])[0]
                 )
-                short_part = np.mean(short_ret, axis=1)[0] * short_num
+                short_part = np.mean(short_ret, axis=1).iloc[0] * short_num
 
             mom_daily_ret = (long_part + short_part) / top
             mom_daily_ret = mom_daily_ret - 0.005 / holding_period
