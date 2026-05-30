@@ -2,6 +2,9 @@
 Run Momentum + High-Bubble Hedge + Low-Bubble Leverage strategy
 on the full NASDAQ 100 + S&P 500 universe.
 
+Preprocessing matches GetData.py:
+  bfill -> ffill -> dropna(axis='columns')
+
 Usage:
     python run_momentum_bubble.py
 """
@@ -14,46 +17,52 @@ from data.ingestion import ingest, ingest_universe
 from data.loader import load_close_panel
 from strategies.momentum_bubble_hedge import run_momentum_bubble_hedge_and_low_bubble_leverage
 
-# Always-present extras: index ETFs for buy-hold comparison + VIX for hedging
-EXTRAS = ["QQQ", "SPY", "^VIX", "UVXY"]
-START  = "1998-01-01"
+# Extras: hedge instruments + bond ETFs + treasury yields (matching GetData.py)
+EXTRAS  = ["QQQ", "SPY", "^VIX", "UVXY", "TLT", "TMF", "^TNX", "^FVX"]
+START   = "1997-01-01"
 
 if __name__ == "__main__":
     init()
 
     # --- Build universe --------------------------------------------------
     print("Fetching index constituent lists from Wikipedia...")
-    universe = get_universe(nasdaq100=True, sp500=True)
+    universe    = get_universe(nasdaq100=True, sp500=True)
     all_symbols = EXTRAS + [s for s in universe if s not in EXTRAS]
-    print(f"Total symbols to ingest: {len(all_symbols)}\n")
+    print(f"Total symbols: {len(all_symbols)}\n")
 
-    # --- Ingest (incremental — skips rows already in DB) -----------------
-    print("Ingesting EXTRAS individually...")
+    # --- Ingest (incremental) --------------------------------------------
+    print("Ingesting extras...")
     for s in EXTRAS:
         n = ingest(s, "1d", START)
         if n > 0:
             print(f"  {s}: {n} rows inserted")
 
-    print("\nIngesting universe (batch download)...")
+    print("\nIngesting universe (batch)...")
     total = ingest_universe(universe, interval="1d", start=START, chunk_size=100)
-    print(f"\nTotal new rows inserted: {total:,}\n")
+    print(f"Total new rows inserted: {total:,}\n")
 
-    # --- Load wide panel -------------------------------------------------
+    # --- Load & preprocess (matching GetData.py) -------------------------
     print("Loading close panel from DB...")
-    df = load_close_panel(all_symbols, interval="1d", start=START, auto_ingest=False)
+    df    = load_close_panel(all_symbols, interval="1d", start=START, auto_ingest=False)
     close = df["Close"]
 
-    # Drop columns with too many NaNs (< 5 years of data = <1260 bars)
-    valid = close.columns[close.notna().sum() >= 1260].tolist()
-    # Always keep QQQ, SPY, ^VIX even if sparse
-    for must_have in ["QQQ", "SPY", "^VIX"]:
-        if must_have in close.columns and must_have not in valid:
-            valid.append(must_have)
-    df["Close"] = close[valid]
+    # Replicate GetData.py: bfill -> ffill -> dropna(axis='columns')
+    # bfill fills pre-IPO NaN with first available price (0 return pre-IPO)
+    # dropna removes any ticker with no data at all (failed downloads)
+    close = close.bfill().ffill().dropna(axis="columns")
 
-    print(f"Close panel: {df['Close'].shape}  |  "
-          f"{df['Close'].index[0].date()} → {df['Close'].index[-1].date()}")
-    print(f"Tickers after quality filter: {len(valid)}\n")
+    # Always keep required columns even if they somehow got dropped
+    for must_have in ["QQQ", "SPY"]:
+        if must_have not in close.columns:
+            raise ValueError(f"Required column {must_have} missing after preprocessing.")
+
+    df["Close"] = close
+
+    print(f"Close panel: {close.shape}  |  "
+          f"{close.index[0].date()} to {close.index[-1].date()}")
+    print(f"Columns: {close.shape[1]} tickers")
+    print(f"Bond ETFs present: TLT={('TLT' in close.columns)}, TMF={('TMF' in close.columns)}")
+    print(f"Treasury yields present: ^TNX={( '^TNX' in close.columns)}, ^FVX={('^FVX' in close.columns)}\n")
 
     # --- Run strategy ----------------------------------------------------
     (
