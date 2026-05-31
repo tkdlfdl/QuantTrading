@@ -57,7 +57,7 @@ def run_reddit_sentiment_bubble(
     price_panel: pd.DataFrame,       # wide: date × symbol, values = close prices
 
     # Grid search parameters
-    holding_period_grid: list = [5, 10, 20, 40],
+    holding_period_grid: list = [1, 2, 3, 5],
     short_threshold_grid: list = [0.5, 0.6, 0.7, 0.8, 0.9],
     long_threshold_grid:  list = [-0.5, -0.6, -0.7, -0.8, -0.9],
     top_n_grid:           list = [5, 10, 20],

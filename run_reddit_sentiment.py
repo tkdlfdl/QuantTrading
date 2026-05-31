@@ -120,7 +120,7 @@ def backtest(symbols: list[str], price_panel) -> None:
         run_reddit_sentiment_bubble(
             sentiment_panel=sentiment_panel[common],
             price_panel=price_panel[common],
-            holding_period_grid=[5, 10, 20, 40],
+            holding_period_grid=[1, 2, 3, 5],
             short_threshold_grid=[0.5, 0.6, 0.7, 0.8, 0.9],
             long_threshold_grid=[-0.5, -0.6, -0.7, -0.8, -0.9],
             top_n_grid=[5, 10, 20],
