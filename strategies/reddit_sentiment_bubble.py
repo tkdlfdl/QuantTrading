@@ -144,30 +144,41 @@ def run_reddit_sentiment_bubble(
             short_candidates = scores[scores >  short_thresh].nlargest(top_n)
             long_candidates  = scores[scores <  long_thresh].nsmallest(top_n)
 
-            # Trade from day i (signal was from day i-1 via shift)
-            # price_ret[i] = (close_i - close_{i-1}) / close_{i-1}
-            # → captures return of the day AFTER the signal date
+            # Regime logic — only trade at extremes, cash in neutral zone:
+            #   score > short_thresh  →  SHORT (sentiment bubble too high)
+            #   score < long_thresh   →  LONG  (sentiment too depressed, buy & hold)
+            #   in between            →  CASH  (ret = 0, no position)
+            # If both signals fire simultaneously → 50% short + 50% long
+            has_short = len(short_candidates) > 0
+            has_long  = len(long_candidates)  > 0
+            in_trade  = has_short or has_long
+
             hold_end = min(i + holding_period, len(common_dates))
 
             for j in range(i, hold_end):
                 trade_date = common_dates[j]
-                ret = 0.0
+                ret = 0.0   # default: CASH
 
-                if len(long_candidates) > 0:
-                    long_ret = price_ret.loc[trade_date, long_candidates.index].mean()
-                    ret += long_ret * 0.5
+                if in_trade:
+                    weight = 0.5 if (has_short and has_long) else 1.0
 
-                if len(short_candidates) > 0:
-                    short_ret = -price_ret.loc[trade_date, short_candidates.index].mean()
-                    ret += short_ret * 0.5
+                    if has_long:
+                        long_ret = price_ret.loc[trade_date, long_candidates.index].mean()
+                        ret += long_ret * weight
+
+                    if has_short:
+                        short_ret = -price_ret.loc[trade_date, short_candidates.index].mean()
+                        ret += short_ret * weight
 
                 daily_returns.append({"date": trade_date, "ret": ret})
 
         if not daily_returns:
             continue
 
-        ret_series = pd.DataFrame(daily_returns).set_index("date")["ret"]
-        ret_series = ret_series[~ret_series.index.duplicated(keep="last")]
+        daily_df   = pd.DataFrame(daily_returns).set_index("date")
+        daily_df   = daily_df[~daily_df.index.duplicated(keep="last")]
+        ret_series = daily_df["ret"]
+        cash_pct   = (ret_series == 0).mean()   # fraction of days in cash
 
         wealth = (1 + ret_series).cumprod()
         wealth = wealth / wealth.iloc[0]
@@ -192,6 +203,7 @@ def run_reddit_sentiment_bubble(
             "Total Return":    tot_ret,
             "Max Drawdown":    mdd,
             "Final Wealth":    wealth.iloc[-1],
+            "Cash %":          round(cash_pct * 100, 1),
             "n_trades":        len(daily_returns),
         }
         grid_results.append(row)
