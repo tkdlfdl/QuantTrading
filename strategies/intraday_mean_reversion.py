@@ -9,8 +9,10 @@ Phase 2 — Momentum flip (after first hour):
   Reverse direction: ex-short → LONG, ex-long → SHORT
   Hold until: end of same day (0) OR next 1/2/3/4 trading days (grid)
 
-Total trade P&L = Phase1 return + Phase2 return − 2×transaction_cost
-(tc charged once per phase: entry+exit each)
+Total trade P&L = Phase1 return + Phase2 return − 2×transaction_cost − short_borrow
+Short borrow: 8%/yr daily rate
+  Phase 1 SHORT (1h): 8% / 252 / 6.5 ≈ 0.005% per hour
+  Phase 2 SHORT (Nd): 8% / 252 × N days (0=same-day uses 0.5d)
 """
 from __future__ import annotations
 
@@ -50,6 +52,7 @@ def run_intraday_mean_reversion(
     lookback_grid: list        = [20, 60, 120],
     top_n_grid: list           = [5, 10, 20],
     transaction_cost: float    = 0.001,              # per phase (0.1% each leg)
+    short_borrow_rate: float   = 0.08,               # 8% annual borrowing cost on short positions
 ) -> tuple[pd.Series, dict, pd.DataFrame]:
     """
     Returns
@@ -154,23 +157,34 @@ def run_intraday_mean_reversion(
                 continue
             p2_exit_ts = bars_p2_exit[-1]  # close of last bar (EOD)
 
+            # ── Borrow cost rates ──────────────────────────────────────────
+            # Phase 1 is always 1 hour; Phase 2 holds flip_hold days (0 = ~half day)
+            TRADING_HOURS   = 6.5
+            daily_borrow    = short_borrow_rate / TRADING_DAYS
+            hourly_borrow   = daily_borrow / TRADING_HOURS
+            p2_hold_days    = flip_hold if flip_hold >= 1 else 0.5
+
             # ── Compute per-position returns ───────────────────────────────
             pos_rets = []
             for ticker, direction in positions.items():
                 try:
-                    # Phase 1: mean-reversion
+                    # Phase 1: mean-reversion (1 hour)
                     ep1 = ho.at[p1_entry_ts, ticker]
                     xp1 = hc.at[p1_exit_ts,  ticker]
                     if pd.isna(ep1) or pd.isna(xp1) or ep1 <= 0:
                         continue
-                    p1_ret = (xp1 / ep1 - 1) * direction - transaction_cost
+                    # Borrow cost only when Phase 1 is SHORT (direction == -1)
+                    p1_borrow = hourly_borrow if direction == -1 else 0.0
+                    p1_ret = (xp1 / ep1 - 1) * direction - transaction_cost - p1_borrow
 
-                    # Phase 2: momentum flip (-direction)
+                    # Phase 2: momentum flip (-direction, holds p2_hold_days)
                     ep2 = ho.at[p2_entry_ts, ticker]
                     xp2 = hc.at[p2_exit_ts,  ticker]
                     if pd.isna(ep2) or pd.isna(xp2) or ep2 <= 0:
                         continue
-                    p2_ret = (xp2 / ep2 - 1) * (-direction) - transaction_cost
+                    # Borrow cost only when Phase 2 is SHORT (-direction == -1, i.e. direction == 1)
+                    p2_borrow = daily_borrow * p2_hold_days if direction == 1 else 0.0
+                    p2_ret = (xp2 / ep2 - 1) * (-direction) - transaction_cost - p2_borrow
 
                     pos_rets.append(p1_ret + p2_ret)
                 except (KeyError, TypeError):

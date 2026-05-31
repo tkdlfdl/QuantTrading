@@ -25,6 +25,7 @@ FLIP_HOLD_DAYS_GRID  = [0, 1, 2, 3, 4]   # 0=same-day EOD, 1-4=trading days
 LOOKBACK_GRID        = [20, 60, 120]
 TOP_N_GRID           = [5, 10, 20]
 TRANS_COST           = 0.001              # 0.1% per phase (tc charged on each leg)
+SHORT_BORROW_RATE    = 0.08               # 8% annual borrow cost on short positions
 
 # ── Universe ────────────────────────────────────────────────────────────────
 init()
@@ -49,6 +50,7 @@ best_ret, best_params, grid_df = run_intraday_mean_reversion(
     lookback_grid=LOOKBACK_GRID,
     top_n_grid=TOP_N_GRID,
     transaction_cost=TRANS_COST,
+    short_borrow_rate=SHORT_BORROW_RATE,
 )
 
 # ── Results ─────────────────────────────────────────────────────────────────
