@@ -1,108 +1,123 @@
 """
 Reddit Sentiment Bubble Strategy — full pipeline.
 
-Steps:
-  1. Fetch Reddit posts for each ticker (PRAW + Pushshift)
-  2. Store raw posts + aggregate daily scores in DB
-  3. Load price data via yf.download()
-  4. Run sentiment bubble backtest with grid search
-
-Setup required (one-time):
-  Create a Reddit app at https://www.reddit.com/prefs/apps
-  Set your credentials below or in environment variables.
+Data sources (no Reddit API credentials required):
+  - PullPush: community Pushshift mirror, historical Reddit posts
+  - StockTwits: explicit bullish/bearish labels, no auth needed
 
 Usage:
     python run_reddit_sentiment.py
 """
-import sys, os
+import sys
 sys.path.insert(0, ".")
 
 import logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
 import yfinance as yf
-import pandas as pd
-import requests
-from io import StringIO
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
+_fig_n = [0]
+def _save(*a, **k):
+    _fig_n[0] += 1
+    plt.savefig(f"sentiment_chart_{_fig_n[0]}.png", dpi=120, bbox_inches="tight")
+    print(f"[Chart {_fig_n[0]} saved as sentiment_chart_{_fig_n[0]}.png]")
+plt.show = _save
 
 from data.db.schema import init
-from data.universe import get_reddit_universe, get_top_by_marketcap, get_universe
-from data.sentiment.reddit_fetcher import fetch_all, _make_reddit, SUBREDDITS
+from data.universe import get_universe, get_top_by_marketcap
+from data.sentiment.pullpush_fetcher import fetch_pullpush
+from data.sentiment.stocktwits_fetcher import fetch_stocktwits
 from data.sentiment.aggregator import store_posts, aggregate_daily, load_sentiment_panel
 from strategies.reddit_sentiment_bubble import run_reddit_sentiment_bubble
 
-# ── Reddit API credentials ─────────────────────────────────────────────────
-REDDIT_CLIENT_ID     = os.getenv("REDDIT_CLIENT_ID",     "YOUR_CLIENT_ID")
-REDDIT_CLIENT_SECRET = os.getenv("REDDIT_CLIENT_SECRET", "YOUR_CLIENT_SECRET")
-REDDIT_USER_AGENT    = os.getenv("REDDIT_USER_AGENT",    "QuantTrading/1.0")
-
+# ── Config ─────────────────────────────────────────────────────────────────
 SENTIMENT_START = "2020-01-01"
 PRICE_START     = "2020-01-01"
-MIN_MENTIONS    = 10
+MIN_MENTIONS    = 5
+TOP_N           = 50   # top stocks by market cap
 
-# ── Universe mode ──────────────────────────────────────────────────────────
-# "reddit"   → NASDAQ100 + WSB classics   (~120 tickers, ~30-45 min)  ← default
-# "top100"   → top 100 by market cap      (~100 tickers, ~25-35 min)
-# "top50"    → top 50 by market cap       (~50  tickers, ~15-20 min)
-# "full"     → NASDAQ100 + S&P500         (~516 tickers, ~2-5 hrs)
-UNIVERSE_MODE = "top50"
+# Data source: "pullpush" (Reddit history) or "stocktwits" or "both"
+DATA_SOURCE = "both"
 
 
-def step1_fetch_sentiment(symbols: list[str], reddit) -> None:
-    """Fetch Reddit posts for each symbol and store in DB."""
-    total_stored = 0
+# ── Step 1: Build universe ─────────────────────────────────────────────────
+def build_universe() -> list[str]:
+    universe = get_universe()
+    return get_top_by_marketcap(universe, n=TOP_N)
+
+
+# ── Step 2: Fetch sentiment ────────────────────────────────────────────────
+def fetch_sentiment(symbols: list[str]) -> None:
+    total = 0
     for i, sym in enumerate(symbols):
-        print(f"  [{i+1}/{len(symbols)}] Fetching {sym}...", end=" ", flush=True)
-        try:
-            posts = fetch_all(sym, reddit, start=SENTIMENT_START, subreddits=SUBREDDITS)
-            if posts.empty:
-                print("no posts")
-                continue
-            n = store_posts(posts)
-            total_stored += n
-            print(f"{len(posts)} posts, {n} new stored")
-        except Exception as e:
-            print(f"ERROR: {e}")
-    print(f"\nTotal new posts stored: {total_stored:,}")
+        print(f"  [{i+1}/{len(symbols)}] {sym} ...", end=" ", flush=True)
+        dfs = []
+
+        if DATA_SOURCE in ("pullpush", "both"):
+            try:
+                df = fetch_pullpush(sym, start=SENTIMENT_START)
+                if not df.empty:
+                    dfs.append(df)
+                    print(f"PullPush:{len(df)}", end=" ", flush=True)
+            except Exception as e:
+                print(f"PullPush:ERR({e})", end=" ", flush=True)
+
+        if DATA_SOURCE in ("stocktwits", "both"):
+            try:
+                df = fetch_stocktwits(sym, max_pages=15)
+                if not df.empty:
+                    dfs.append(df)
+                    print(f"StockTwits:{len(df)}", end=" ", flush=True)
+            except Exception as e:
+                print(f"StockTwits:ERR({e})", end=" ", flush=True)
+
+        if dfs:
+            import pandas as pd
+            combined = pd.concat(dfs, ignore_index=True).drop_duplicates("post_id")
+            n = store_posts(combined)
+            total += n
+            print(f"→ {n} new stored")
+        else:
+            print("no data")
+
+    print(f"\nTotal new posts stored: {total:,}")
 
 
-def step2_aggregate() -> pd.DataFrame:
-    """Aggregate raw posts to daily sentiment scores."""
+# ── Step 3: Aggregate ──────────────────────────────────────────────────────
+def aggregate() -> None:
     print("Aggregating daily sentiment scores...")
     agg = aggregate_daily()
     print(f"Aggregated {len(agg):,} symbol-day rows.")
-    return agg
 
 
-def step3_load_prices(symbols: list[str]) -> pd.DataFrame:
-    """Download price panel via yf.download()."""
-    print(f"\nDownloading price data for {len(symbols)} tickers from {PRICE_START}...")
-    df = yf.download(tickers=symbols, start=PRICE_START, progress=True, auto_adjust=True)
-    close = df["Close"].ffill().dropna(axis="columns")
+# ── Step 4: Prices ─────────────────────────────────────────────────────────
+def load_prices(symbols: list[str]):
+    print(f"\nDownloading prices for {len(symbols)} tickers from {PRICE_START}...")
+    raw   = yf.download(tickers=symbols, start=PRICE_START, progress=True, auto_adjust=True)
+    close = raw["Close"].ffill().dropna(axis="columns")
     print(f"Price panel: {close.shape}")
     return close
 
 
-def step4_backtest(symbols: list[str], price_panel: pd.DataFrame) -> None:
-    """Load sentiment panel, align with prices, run strategy."""
+# ── Step 5: Backtest ───────────────────────────────────────────────────────
+def backtest(symbols: list[str], price_panel) -> None:
     sentiment_panel = load_sentiment_panel(symbols, start=PRICE_START)
     if sentiment_panel.empty:
-        print("No sentiment data found. Run fetch step first.")
+        print("No sentiment data in DB. Run fetch step first.")
         return
 
-    # Keep only symbols present in both panels
-    common_syms = [s for s in sentiment_panel.columns if s in price_panel.columns]
-    sentiment_panel = sentiment_panel[common_syms]
-    price_panel     = price_panel[common_syms]
+    common = [s for s in sentiment_panel.columns if s in price_panel.columns]
+    print(f"\nSymbols with sentiment + price data: {len(common)}")
+    print(f"Sentiment: {sentiment_panel.index[0].date()} to {sentiment_panel.index[-1].date()}")
+    print(f"Price:     {price_panel.index[0].date()} to {price_panel.index[-1].date()}\n")
 
-    print(f"\nRunning backtest on {len(common_syms)} symbols with sentiment data...")
-    print(f"Sentiment period: {sentiment_panel.index[0].date()} to {sentiment_panel.index[-1].date()}")
-    print(f"Price period:     {price_panel.index[0].date()} to {price_panel.index[-1].date()}\n")
-
-    analysis, yearly_analysis, best_wealth, best_ret, grid_df, best_params = \
+    (analysis, yearly_analysis, best_wealth, best_ret, grid_df, best_params) = \
         run_reddit_sentiment_bubble(
-            sentiment_panel=sentiment_panel,
-            price_panel=price_panel,
+            sentiment_panel=sentiment_panel[common],
+            price_panel=price_panel[common],
             holding_period_grid=[5, 10, 20, 40],
             short_threshold_grid=[0.5, 0.6, 0.7, 0.8, 0.9],
             long_threshold_grid=[-0.5, -0.6, -0.7, -0.8, -0.9],
@@ -127,44 +142,22 @@ def step4_backtest(symbols: list[str], price_panel: pd.DataFrame) -> None:
     print(grid_df[cols].head(10).to_string(index=False))
 
 
-def build_universe() -> list[str]:
-    if UNIVERSE_MODE == "reddit":
-        return get_reddit_universe()
-    elif UNIVERSE_MODE == "top100":
-        return get_top_by_marketcap(get_universe(), n=100)
-    elif UNIVERSE_MODE == "top50":
-        return get_top_by_marketcap(get_universe(), n=50)
-    else:  # "full"
-        return get_universe()
-
-
+# ── Main ───────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     init()
+
+    print("=== Step 1: Building universe ===")
     symbols = build_universe()
-    print(f"Universe mode: {UNIVERSE_MODE} → {len(symbols)} tickers\n")
+    print(f"Universe: {len(symbols)} tickers\n")
 
-    # Validate credentials before starting long fetch
-    if REDDIT_CLIENT_ID == "YOUR_CLIENT_ID":
-        print("\nReddit API credentials not set.")
-        print("Set REDDIT_CLIENT_ID and REDDIT_CLIENT_SECRET environment variables.")
-        print("Or edit run_reddit_sentiment.py directly.")
-        print("\nTo create Reddit API credentials:")
-        print("  1. Go to https://www.reddit.com/prefs/apps")
-        print("  2. Click 'create another app'")
-        print("  3. Select 'script', fill in name/description")
-        print("  4. Copy the client_id (under app name) and secret")
-        sys.exit(1)
+    print("=== Step 2: Fetching sentiment (PullPush + StockTwits) ===")
+    fetch_sentiment(symbols)
 
-    reddit = _make_reddit(REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, REDDIT_USER_AGENT)
+    print("\n=== Step 3: Aggregating daily scores ===")
+    aggregate()
 
-    print("\n=== Step 1: Fetching Reddit sentiment data ===")
-    step1_fetch_sentiment(symbols, reddit)
+    print("\n=== Step 4: Loading prices ===")
+    price_panel = load_prices(symbols)
 
-    print("\n=== Step 2: Aggregating daily scores ===")
-    step2_aggregate()
-
-    print("\n=== Step 3: Loading price data ===")
-    price_panel = step3_load_prices(symbols)
-
-    print("\n=== Step 4: Running backtest ===")
-    step4_backtest(symbols, price_panel)
+    print("\n=== Step 5: Running backtest ===")
+    backtest(symbols, price_panel)
