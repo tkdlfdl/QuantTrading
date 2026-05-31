@@ -20,11 +20,11 @@ import numpy as np
 
 # ── Config ─────────────────────────────────────────────────────────────────
 DAILY_START  = "2018-01-01"   # long history for lookback window
-SIGMA_GRID      = [3.5, 4.0, 4.5, 5.0]
-HOLD_HOURS_GRID = [1, 2, 4, 8]
-LOOKBACK_GRID   = [20, 60, 120]
-TOP_N_GRID      = [5, 10, 20]
-TRANS_COST      = 0.001       # 0.1% per trade (round-trip)
+SIGMA_GRID           = [3.5, 4.0, 4.5, 5.0]
+FLIP_HOLD_DAYS_GRID  = [0, 1, 2, 3, 4]   # 0=same-day EOD, 1-4=trading days
+LOOKBACK_GRID        = [20, 60, 120]
+TOP_N_GRID           = [5, 10, 20]
+TRANS_COST           = 0.001              # 0.1% per phase (tc charged on each leg)
 
 # ── Universe ────────────────────────────────────────────────────────────────
 init()
@@ -45,7 +45,7 @@ best_ret, best_params, grid_df = run_intraday_mean_reversion(
     hourly_open=hourly_open,
     hourly_close=hourly_close,
     sigma_grid=SIGMA_GRID,
-    hold_hours_grid=HOLD_HOURS_GRID,
+    flip_hold_days_grid=FLIP_HOLD_DAYS_GRID,
     lookback_grid=LOOKBACK_GRID,
     top_n_grid=TOP_N_GRID,
     transaction_cost=TRANS_COST,
@@ -79,10 +79,11 @@ if best_ret is not None:
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 8),
                                     gridspec_kw={"height_ratios": [3, 1]})
     ax1.plot(wealth.index, wealth.values, linewidth=1.5, color="steelblue")
+    flip_label = "EOD" if best_params['flip_hold_days'] == 0 else f"{best_params['flip_hold_days']}d"
     ax1.set_title(
-        f"Intraday Mean-Reversion | σ={best_params['sigma']} | "
-        f"hold={best_params['hold_hours']}h | lookback={best_params['lookback']}d | "
-        f"top_n={best_params['top_n']} | "
+        f"Intraday MR+Flip | σ={best_params['sigma']} | "
+        f"flip_hold={flip_label} | lookback={best_params['lookback']}d | "
+        f"top_n={best_params['top_n']} | tc=0.1%×2 | "
         f"Sharpe={best_params['Sharpe']:.3f} | "
         f"Return={best_params['Total_Return']:+.1%}"
     )
