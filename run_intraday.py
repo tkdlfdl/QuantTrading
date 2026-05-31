@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 sys.path.insert(0, ".")
 
 from data.db.schema import init
-from data.universe import get_universe, get_top_by_marketcap
+from data.universe import get_universe
 from data.intraday_loader import load_daily_close, load_hourly_bars
 from strategies.intraday_mean_reversion import run_intraday_mean_reversion
 
@@ -20,9 +20,7 @@ import numpy as np
 
 # ── Config ─────────────────────────────────────────────────────────────────
 DAILY_START  = "2018-01-01"   # long history for lookback window
-TOP_N_UNIV   = 50             # limit universe to top 50 by mktcap
-
-SIGMA_GRID      = [1.5, 2.0, 2.5, 3.0]
+SIGMA_GRID      = [3.5, 4.0, 4.5, 5.0]
 HOLD_HOURS_GRID = [1, 2, 4, 8]
 LOOKBACK_GRID   = [20, 60, 120]
 TOP_N_GRID      = [5, 10, 20]
@@ -30,8 +28,8 @@ TRANS_COST      = 0.001       # 0.1% per trade (round-trip)
 
 # ── Universe ────────────────────────────────────────────────────────────────
 init()
-print("Building universe (NASDAQ100 + S&P500, top 50 by market cap)...")
-universe = get_top_by_marketcap(get_universe(), n=TOP_N_UNIV)
+print("Building universe (full NASDAQ100 + S&P500)...")
+universe = get_universe()
 print(f"Universe: {len(universe)} tickers\n")
 
 # ── Data ────────────────────────────────────────────────────────────────────
