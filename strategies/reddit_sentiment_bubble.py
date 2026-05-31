@@ -57,19 +57,25 @@ def run_reddit_sentiment_bubble(
     price_panel: pd.DataFrame,       # wide: date × symbol, values = close prices
 
     # Grid search parameters
-    holding_period_grid: list = [1, 2, 3, 5],
-    short_threshold_grid: list = [0.5, 0.6, 0.7, 0.8, 0.9],
-    long_threshold_grid:  list = [-0.5, -0.6, -0.7, -0.8, -0.9],
-    top_n_grid:           list = [5, 10, 20],
-    ma_window_grid:       list = [30, 60],
-    z_window_grid:        list = [60, 120],
-    sentiment_scale_grid: list = [0.05],
+    holding_period_grid:   list = [1, 2, 3, 5],
+    mild_threshold_grid:   list = [0.3, 0.4, 0.5],     # enter trend position
+    extreme_threshold_grid: list = [0.6, 0.7, 0.8, 0.9], # flip to contrarian
+    top_n_grid:            list = [5, 10, 20],
+    ma_window_grid:        list = [30, 60],
+    z_window_grid:         list = [60, 120],
+    sentiment_scale_grid:  list = [0.05],
 
-    min_mentions: int = 5,           # min total mentions for a symbol to be included
+    min_mentions: int = 5,
     trading_days: int = 252,
 ) -> tuple:
     """
-    Backtest a contrarian Reddit sentiment bubble strategy.
+    4-zone regime strategy — combines trend-following AND contrarian:
+
+      Extreme positive  (score > extreme)           → SHORT  (contrarian: bubble)
+      Moderate positive (mild < score <= extreme)   → LONG   (trend-follow)
+      Neutral           (|score| < mild)            → CASH   (no trade)
+      Moderate negative (-extreme <= score < -mild) → SHORT  (trend-follow)
+      Extreme negative  (score < -extreme)          → LONG   (contrarian: oversold)
 
     Returns:
         analysis, yearly_analysis, best_wealth, best_ret, grid_result_df, best_params
@@ -100,14 +106,15 @@ def run_reddit_sentiment_bubble(
     best_wealth  = None
     best_params  = None
 
-    total_combos = (len(holding_period_grid) * len(short_threshold_grid) *
-                    len(long_threshold_grid) * len(top_n_grid) *
-                    len(ma_window_grid) * len(z_window_grid) * len(sentiment_scale_grid))
-    print(f"Grid search: {total_combos} combinations...")
+    valid_pairs  = [(m, e) for m in mild_threshold_grid
+                             for e in extreme_threshold_grid if m < e]
+    total_combos = len(valid_pairs) * len(holding_period_grid) * len(top_n_grid) * \
+                   len(ma_window_grid) * len(z_window_grid) * len(sentiment_scale_grid)
+    print(f"Grid search: {total_combos} combinations (4-zone regime)...")
 
-    for (holding_period, short_thresh, long_thresh, top_n,
+    for (holding_period, (mild_thresh, extreme_thresh), top_n,
          ma_window, z_window, sent_scale) in product(
-        holding_period_grid, short_threshold_grid, long_threshold_grid,
+        holding_period_grid, valid_pairs,
         top_n_grid, ma_window_grid, z_window_grid, sentiment_scale_grid,
     ):
         # ── Compute bubble scores (all backward-looking rolling stats) ────────
@@ -141,26 +148,34 @@ def run_reddit_sentiment_bubble(
             if scores.empty:
                 continue
 
-            short_candidates = scores[scores >  short_thresh].nlargest(top_n)
-            long_candidates  = scores[scores <  long_thresh].nsmallest(top_n)
+            # ── 4-zone classification (no-lookahead: scores already shifted) ──
+            # Extreme positive  → contrarian SHORT
+            extreme_short = scores[scores > extreme_thresh].nlargest(top_n)
+            # Moderate positive → trend-follow LONG
+            mild_long     = scores[(scores > mild_thresh) &
+                                   (scores <= extreme_thresh)].nlargest(top_n)
+            # Moderate negative → trend-follow SHORT
+            mild_short    = scores[(scores < -mild_thresh) &
+                                   (scores >= -extreme_thresh)].nsmallest(top_n)
+            # Extreme negative  → contrarian LONG
+            extreme_long  = scores[scores < -extreme_thresh].nsmallest(top_n)
 
-            # Regime logic — only trade at extremes, cash in neutral zone:
-            #   score > short_thresh  →  SHORT (sentiment bubble too high)
-            #   score < long_thresh   →  LONG  (sentiment too depressed, buy & hold)
-            #   in between            →  CASH  (ret = 0, no position)
-            # If both signals fire simultaneously → 50% short + 50% long
-            has_short = len(short_candidates) > 0
+            # Combine legs
+            long_candidates  = pd.concat([mild_long,  extreme_long]).drop_duplicates()
+            short_candidates = pd.concat([mild_short, extreme_short]).drop_duplicates()
+
             has_long  = len(long_candidates)  > 0
-            in_trade  = has_short or has_long
+            has_short = len(short_candidates) > 0
+            in_trade  = has_long or has_short
 
             hold_end = min(i + holding_period, len(common_dates))
 
             for j in range(i, hold_end):
                 trade_date = common_dates[j]
-                ret = 0.0   # default: CASH
+                ret = 0.0   # default: CASH (neutral zone)
 
                 if in_trade:
-                    weight = 0.5 if (has_short and has_long) else 1.0
+                    weight = 0.5 if (has_long and has_short) else 1.0
 
                     if has_long:
                         long_ret = price_ret.loc[trade_date, long_candidates.index].mean()
@@ -191,10 +206,10 @@ def run_reddit_sentiment_bubble(
         tot_ret  = wealth.iloc[-1] - 1
 
         row = {
-            "holding_period":  holding_period,
-            "short_threshold": short_thresh,
-            "long_threshold":  long_thresh,
-            "top_n":           top_n,
+            "holding_period":   holding_period,
+            "mild_threshold":   mild_thresh,
+            "extreme_threshold": extreme_thresh,
+            "top_n":            top_n,
             "ma_window":       ma_window,
             "z_window":        z_window,
             "sentiment_scale": sent_scale,
@@ -235,7 +250,7 @@ def run_reddit_sentiment_bubble(
     axes[0].plot(best_wealth.index, best_wealth.values, linewidth=2, label="Sentiment Bubble Strategy")
     axes[0].set_title(f"Reddit Sentiment Bubble | top_n={best_params['top_n']} | "
                       f"hold={best_params['holding_period']}d | "
-                      f"short>{best_params['short_threshold']} long<{best_params['long_threshold']}")
+                      f"mild={best_params['mild_threshold']} extreme={best_params['extreme_threshold']}")
     axes[0].set_ylabel("Cumulative Wealth")
     axes[0].legend()
     axes[0].grid(True)
@@ -252,8 +267,10 @@ def run_reddit_sentiment_bubble(
         z_window=best_params["z_window"],
     ).shift(1)  # match signal_scores shift
     axes[1].plot(sample_bubble.index, sample_bubble.values, label=f"Sentiment Bubble Score: {sample_sym}")
-    axes[1].axhline(best_params["short_threshold"], linestyle="--", color="red",  label="Short threshold")
-    axes[1].axhline(best_params["long_threshold"],  linestyle="--", color="green", label="Long threshold")
+    axes[1].axhline( best_params["extreme_threshold"], linestyle="--", color="red",    label=f"Extreme (contrarian flip) +{best_params['extreme_threshold']}")
+    axes[1].axhline(-best_params["extreme_threshold"], linestyle="--", color="red",    label=f"Extreme (contrarian flip) -{best_params['extreme_threshold']}")
+    axes[1].axhline( best_params["mild_threshold"],    linestyle=":",  color="orange", label=f"Mild (trend entry) +{best_params['mild_threshold']}")
+    axes[1].axhline(-best_params["mild_threshold"],    linestyle=":",  color="orange", label=f"Mild (trend entry) -{best_params['mild_threshold']}")
     axes[1].axhline(0, linestyle="--", linewidth=0.8)
     axes[1].set_ylim(-1, 1)
     axes[1].set_ylabel("Bubble Score")
