@@ -42,4 +42,35 @@ def init():
         )
     """)
 
+    # Raw Reddit posts with VADER sentiment scores
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS sentiment_posts (
+            post_id      VARCHAR   NOT NULL,
+            symbol       VARCHAR   NOT NULL,
+            subreddit    VARCHAR   NOT NULL,
+            ts           TIMESTAMP NOT NULL,
+            title        VARCHAR,
+            upvotes      INTEGER   DEFAULT 0,
+            num_comments INTEGER   DEFAULT 0,
+            compound     DOUBLE,
+            pos          DOUBLE,
+            neg          DOUBLE,
+            neu          DOUBLE,
+            PRIMARY KEY (post_id, symbol)
+        )
+    """)
+
+    # Daily aggregated sentiment per symbol (weighted by upvotes + comments)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS sentiment_daily (
+            date              DATE    NOT NULL,
+            symbol            VARCHAR NOT NULL,
+            avg_compound      DOUBLE,
+            weighted_compound DOUBLE,
+            mention_count     INTEGER,
+            post_count        INTEGER,
+            PRIMARY KEY (date, symbol)
+        )
+    """)
+
     print("DB schema initialised.")

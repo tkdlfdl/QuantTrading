@@ -2,14 +2,17 @@
 Fetch live index constituent lists from Wikipedia.
 
     from data.universe import get_universe
-    tickers = get_universe()          # NASDAQ 100 + S&P 500, deduplicated
-    tickers = get_universe(sp500=False)   # NASDAQ 100 only
+    tickers = get_universe()                    # NASDAQ 100 + S&P 500, deduplicated
+    tickers = get_universe(sp500=False)         # NASDAQ 100 only
+    tickers = get_reddit_universe()             # NASDAQ 100 + WSB classics (~120 tickers)
+    tickers = get_top_by_marketcap(tickers, 50) # top 50 by market cap
 """
 from __future__ import annotations
 
 from io import StringIO
 import pandas as pd
 import requests
+import yfinance as yf
 
 _NDX_URL   = "https://en.wikipedia.org/wiki/Nasdaq-100"
 _SP500_URL = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
@@ -56,3 +59,53 @@ def get_universe(nasdaq100: bool = True, sp500: bool = True) -> list[str]:
     combined = sorted(tickers)
     print(f"Combined universe (unique): {len(combined)} tickers")
     return combined
+
+
+# Stocks consistently popular on WSB / Reddit that may not be in NASDAQ 100
+_WSB_CLASSICS = [
+    "GME", "AMC", "BBBY", "BB", "NOK",        # original meme stocks
+    "PLTR", "SOFI", "HOOD", "COIN", "RIVN",    # newer retail favourites
+    "LCID", "NIO", "WISH", "CLOV", "CLNE",
+    "SPCE", "MARA", "RIOT", "SNDL", "SENS",
+    "SQ",  "PYPL", "SNAP", "UBER", "LYFT",
+    "ARKK", "SPY",  "QQQ",
+]
+
+
+def get_reddit_universe() -> list[str]:
+    """
+    NASDAQ 100 + hand-picked WSB classics.
+    ~120 tickers — good balance of coverage vs. data-collection speed.
+    """
+    ndx = get_nasdaq100()
+    combined = sorted(set(ndx) | set(_WSB_CLASSICS))
+    print(f"Reddit universe: {len(combined)} tickers (NASDAQ100 + WSB classics)")
+    return combined
+
+
+def get_top_by_marketcap(symbols: list[str], n: int = 100) -> list[str]:
+    """
+    Filter `symbols` to the top-N by market cap using yfinance.
+    Downloads info in batches of 50. Falls back to full list if yfinance fails.
+    """
+    print(f"Fetching market caps for {len(symbols)} tickers (top {n} kept)...")
+    caps: dict[str, float] = {}
+    batch_size = 50
+
+    for i in range(0, len(symbols), batch_size):
+        batch = symbols[i : i + batch_size]
+        try:
+            tickers_obj = yf.Tickers(" ".join(batch))
+            for sym in batch:
+                try:
+                    caps[sym] = tickers_obj.tickers[sym].info.get("marketCap", 0) or 0
+                except Exception:
+                    caps[sym] = 0
+        except Exception:
+            for sym in batch:
+                caps[sym] = 0
+
+    ranked = sorted(caps, key=lambda s: caps[s], reverse=True)
+    top    = ranked[:n]
+    print(f"Top {n} by market cap selected (min cap: ${caps.get(top[-1], 0):,.0f})")
+    return sorted(top)
