@@ -113,6 +113,9 @@ def get_reddit_returns(start: str) -> pd.Series:
     results = run_reddit_sentiment_bubble(
         sentiment_panel=sent[common],
         price_panel=price[common],
+        transaction_cost=0.001,   # 0.1% round-trip per position
+        cash_rate=0.02,           # 2% annual on idle cash
+        short_borrow_rate=0.08,   # 8% annual short borrow cost
         **RED_PARAMS,
     )
     return results[3].rename("Reddit")  # best_ret
