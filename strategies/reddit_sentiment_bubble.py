@@ -67,6 +67,9 @@ def run_reddit_sentiment_bubble(
 
     min_mentions: int = 5,
     trading_days: int = 252,
+    transaction_cost: float = 0.001,  # 0.1% round-trip per position per rebalance
+    cash_rate:         float = 0.05,  # annual yield earned on idle cash (T-bill/CD)
+    short_borrow_rate: float = 0.08,  # annual borrowing cost for short positions
 ) -> tuple:
     """
     4-zone regime strategy — combines trend-following AND contrarian:
@@ -170,11 +173,22 @@ def run_reddit_sentiment_bubble(
 
             hold_end = min(i + holding_period, len(common_dates))
 
+            # Transaction cost on entry day (round-trip cost deducted when positions open)
+            # cost = transaction_cost × number_of_positions_traded
+            n_positions = len(long_candidates) + len(short_candidates)
+            entry_cost  = transaction_cost * n_positions if in_trade else 0.0
+
             for j in range(i, hold_end):
                 trade_date = common_dates[j]
-                ret = 0.0   # default: CASH (neutral zone)
+                daily_rf     = cash_rate / trading_days
+                daily_borrow = short_borrow_rate / trading_days
+                ret          = 0.0   # always reset each day
 
-                if in_trade:
+                if not in_trade:
+                    # Idle cash earns T-bill / short-term CD yield
+                    ret = daily_rf
+
+                else:
                     weight = 0.5 if (has_long and has_short) else 1.0
 
                     if has_long:
@@ -184,6 +198,12 @@ def run_reddit_sentiment_bubble(
                     if has_short:
                         short_ret = -price_ret.loc[trade_date, short_candidates.index].mean()
                         ret += short_ret * weight
+                        # Daily short borrowing cost (8%/yr default)
+                        ret -= daily_borrow * weight
+
+                    # Round-trip transaction cost on entry day only
+                    if j == i:
+                        ret -= entry_cost
 
                 daily_returns.append({"date": trade_date, "ret": ret})
 
