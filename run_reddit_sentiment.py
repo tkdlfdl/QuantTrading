@@ -34,16 +34,15 @@ from data.sentiment.aggregator import store_posts, aggregate_daily, load_sentime
 from strategies.reddit_sentiment_bubble import run_reddit_sentiment_bubble
 
 # ── Config ─────────────────────────────────────────────────────────────────
-SENTIMENT_START = "2024-01-01"   # 1.5 years — ~6 GDELT chunks per ticker (~17 min total)
+SENTIMENT_START = "2024-01-01"   # fetch from this date forward
 PRICE_START     = "2024-01-01"
 MIN_MENTIONS    = 3
-TOP_N           = 50
 
 
 # ── Step 1: Build universe ─────────────────────────────────────────────────
 def build_universe() -> list[str]:
-    universe = get_universe()
-    return get_top_by_marketcap(universe, n=TOP_N)
+    """Full NASDAQ100 + S&P500 universe (~516 unique tickers)."""
+    return get_universe()
 
 
 # ── Step 2: Fetch sentiment ────────────────────────────────────────────────

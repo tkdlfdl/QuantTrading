@@ -31,7 +31,7 @@ import requests
 from io import StringIO
 
 from data.db.schema import init
-from data.universe import get_universe, get_top_by_marketcap
+from data.universe import get_universe
 from data.sentiment.aggregator import load_sentiment_panel
 from strategies.momentum_bubble_hedge import run_momentum_bubble_hedge_and_low_bubble_leverage
 from strategies.reddit_sentiment_bubble import run_reddit_sentiment_bubble
@@ -40,7 +40,6 @@ from portfolio.constructor import run_portfolio_allocation
 # ── Config ─────────────────────────────────────────────────────────────────
 # Use overlapping period so both strategies have data
 START   = "2024-01-01"
-TOP_N   = 50
 
 # Momentum strategy best params (from full backtest)
 MOM_PARAMS = dict(
@@ -101,9 +100,10 @@ def get_momentum_returns(start: str) -> pd.Series:
 
 
 def get_reddit_returns(start: str) -> pd.Series:
-    """Run Reddit sentiment strategy and return daily return series."""
+    """Run Reddit sentiment strategy — full NASDAQ100 + S&P500 universe."""
     print("\n=== Running Reddit Sentiment strategy ===")
-    universe = get_top_by_marketcap(get_universe(), n=TOP_N)
+    universe = get_universe()
+    print(f"Universe: {len(universe)} tickers")
     raw      = yf.download(tickers=universe, start=start, progress=False, auto_adjust=True)
     price    = raw["Close"].ffill().dropna(axis="columns")
     sent     = load_sentiment_panel(universe, start=start)
