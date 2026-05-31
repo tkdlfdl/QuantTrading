@@ -55,7 +55,7 @@ def fetch_pullpush(
                 "sort":      "asc",
             }
             try:
-                resp = requests.get(_BASE, params=params, timeout=15)
+                resp = requests.get(_BASE, params=params, timeout=5)
                 if resp.status_code == 429:
                     log.warning("PullPush rate limit. Sleeping 30s.")
                     time.sleep(30)

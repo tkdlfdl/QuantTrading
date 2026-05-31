@@ -28,19 +28,16 @@ plt.show = _save
 
 from data.db.schema import init
 from data.universe import get_universe, get_top_by_marketcap
-from data.sentiment.pullpush_fetcher import fetch_pullpush
-from data.sentiment.stocktwits_fetcher import fetch_stocktwits
+from data.sentiment.gdelt_fetcher import fetch_gdelt
+from data.sentiment.yfinance_news_fetcher import fetch_yfinance_news
 from data.sentiment.aggregator import store_posts, aggregate_daily, load_sentiment_panel
 from strategies.reddit_sentiment_bubble import run_reddit_sentiment_bubble
 
 # ── Config ─────────────────────────────────────────────────────────────────
-SENTIMENT_START = "2020-01-01"
-PRICE_START     = "2020-01-01"
-MIN_MENTIONS    = 5
-TOP_N           = 50   # top stocks by market cap
-
-# Data source: "pullpush" (Reddit history) or "stocktwits" or "both"
-DATA_SOURCE = "both"
+SENTIMENT_START = "2024-01-01"   # 1.5 years — ~6 GDELT chunks per ticker (~17 min total)
+PRICE_START     = "2024-01-01"
+MIN_MENTIONS    = 3
+TOP_N           = 50
 
 
 # ── Step 1: Build universe ─────────────────────────────────────────────────
@@ -51,35 +48,40 @@ def build_universe() -> list[str]:
 
 # ── Step 2: Fetch sentiment ────────────────────────────────────────────────
 def fetch_sentiment(symbols: list[str]) -> None:
+    """
+    Two no-credential sources:
+      1. GDELT — historical news back to 2022, VADER scored
+      2. Yahoo Finance news — recent articles (top-up)
+    """
+    import pandas as pd
     total = 0
     for i, sym in enumerate(symbols):
-        print(f"  [{i+1}/{len(symbols)}] {sym} ...", end=" ", flush=True)
+        print(f"  [{i+1}/{len(symbols)}] {sym}...", end=" ", flush=True)
         dfs = []
 
-        if DATA_SOURCE in ("pullpush", "both"):
-            try:
-                df = fetch_pullpush(sym, start=SENTIMENT_START)
-                if not df.empty:
-                    dfs.append(df)
-                    print(f"PullPush:{len(df)}", end=" ", flush=True)
-            except Exception as e:
-                print(f"PullPush:ERR({e})", end=" ", flush=True)
+        # GDELT: historical news
+        try:
+            df = fetch_gdelt(sym, start=SENTIMENT_START, sleep=0.5)
+            if not df.empty:
+                dfs.append(df)
+                print(f"GDELT:{len(df)}", end=" ", flush=True)
+        except Exception as e:
+            print(f"GDELT:ERR", end=" ", flush=True)
 
-        if DATA_SOURCE in ("stocktwits", "both"):
-            try:
-                df = fetch_stocktwits(sym, max_pages=15)
-                if not df.empty:
-                    dfs.append(df)
-                    print(f"StockTwits:{len(df)}", end=" ", flush=True)
-            except Exception as e:
-                print(f"StockTwits:ERR({e})", end=" ", flush=True)
+        # yfinance: recent news top-up
+        try:
+            df = fetch_yfinance_news(sym)
+            if not df.empty:
+                dfs.append(df)
+                print(f"YF:{len(df)}", end=" ", flush=True)
+        except Exception:
+            pass
 
         if dfs:
-            import pandas as pd
             combined = pd.concat(dfs, ignore_index=True).drop_duplicates("post_id")
             n = store_posts(combined)
             total += n
-            print(f"→ {n} new stored")
+            print(f"-> {n} stored")
         else:
             print("no data")
 
