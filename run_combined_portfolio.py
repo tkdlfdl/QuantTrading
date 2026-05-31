@@ -6,10 +6,11 @@ Strategies:
   2. Reddit Sentiment Bubble (daily)
   3. Intraday Mean-Reversion + Flip (1h signal, best params)
 
-Two portfolio options:
+Three portfolio options:
   Option 1 — Fixed weight grid search (step=0.2, all 3 strategies)
   Option 2 — Leverage on Intraday MR (grid 1-3x, 12%/yr cost),
              then fixed-weight combine with Momentum + Reddit
+  Option 3 — Dynamic momentum-based allocation with lookback × hold × max_alloc grid
 
 Usage: python run_combined_portfolio.py
 """
@@ -34,6 +35,7 @@ from data.db.schema import init
 from data.universe import get_universe
 from data.intraday_loader import load_daily_close, load_hourly_bars
 from strategies.intraday_mean_reversion import run_intraday_mean_reversion
+from portfolio.constructor import run_portfolio_allocation
 from run_portfolio import get_momentum_returns, get_reddit_returns, START
 
 # ── Intraday MR best params ────────────────────────────────────────────────
@@ -247,6 +249,54 @@ if best2_ret is not None:
 plt.tight_layout()
 plt.show()
 
+# ══════════════════════════════════════════════════════════════════════════
+# OPTION 3 — Dynamic momentum allocation with max_alloc cap
+# ══════════════════════════════════════════════════════════════════════════
+
+_print_header("OPTION 3: Dynamic Momentum Allocation (lookback × hold × max_alloc)")
+
+DYN_LOOKBACK   = [20, 40, 60, 120]
+DYN_HOLD       = [5, 10, 20, 40]
+DYN_MAX_ALLOC  = [0.5, 0.6, 0.7, 0.8, 1.0]
+
+print(f"Grid: {len(DYN_LOOKBACK)} lookback × {len(DYN_HOLD)} hold × "
+      f"{len(DYN_MAX_ALLOC)} max_alloc = "
+      f"{len(DYN_LOOKBACK)*len(DYN_HOLD)*len(DYN_MAX_ALLOC)} combos\n")
+
+(_, yearly_dyn, best_dyn_ret, best_dyn_wealth,
+ best_dyn_weights, grid_dyn, best_dyn_params) = run_portfolio_allocation(
+    returns_dict={"Momentum": mom_ret, "Reddit": reddit_ret, "IntradayMR": mr_ret},
+    method="momentum",
+    lookback_grid=DYN_LOOKBACK,
+    hold_period_grid=DYN_HOLD,
+    max_alloc_grid=DYN_MAX_ALLOC,
+)
+
+print(f"\n{'Lookback':>9} {'Hold':>6} {'MaxAlloc':>9} | "
+      f"{'Sharpe':>7} {'Sortino':>8} {'Return':>8} {'Max_DD':>8}")
+print("-" * 66)
+for _, r in grid_dyn.head(20).iterrows():
+    print(f"{int(r['lookback']):>9} {int(r['hold_period']):>6} "
+          f"{r['max_alloc']:>9.0%} | "
+          f"{r['Sharpe']:>7.3f} {r['Sortino']:>8.3f} "
+          f"{r['Total Return']:>8.1%} {r['Max DD']:>8.1%}")
+
+# Yearly breakdown for best dynamic
+_print_header("OPTION 3 — Yearly breakdown (best params)")
+if best_dyn_ret is not None:
+    for yr, grp in best_dyn_ret.groupby(best_dyn_ret.index.year):
+        r   = float((1 + grp).prod() - 1)
+        w   = (1 + grp).cumprod(); w = w / w.iloc[0]
+        mdd = float((w / w.cummax() - 1).min())
+        sh  = float(np.sqrt(252) * grp.mean() / grp.std()) if grp.std() > 0 else np.nan
+        print(f"  {yr}: Return={r:>+8.2%}  Sharpe={sh:>6.3f}  Max_DD={mdd:>8.2%}  "
+              f"Days={len(grp)}")
+    p = best_dyn_params
+    print(f"\n  Best params: lookback={p['lookback']}d  hold={p['hold_period']}d  "
+          f"max_alloc={p['max_alloc']:.0%}")
+    print(f"  Sharpe={p['Sharpe']:.3f}  Sortino={p['Sortino']:.3f}  "
+          f"Return={p['Total Return']:+.1%}  Max_DD={p['Max DD']:.1%}")
+
 # ── Summary ────────────────────────────────────────────────────────────────
 _print_header("SUMMARY")
 print(f"\nOption 1 best: {best1['Momentum']:.0%} Mom + {best1['Reddit']:.0%} Reddit + "
@@ -260,4 +310,11 @@ print(f"\nOption 2 best: {b2['leverage']:.1f}x lev on MR | "
 print(f"  Sharpe={b2['Sharpe']:.3f}  Sortino={b2['Sortino']:.3f}  "
       f"Return={b2['Return']:+.1%}  Max_DD={b2['Max_DD']:.1%}")
 
+b3 = grid_dyn.iloc[0]
+print(f"\nOption 3 best: lookback={int(b3['lookback'])}d  hold={int(b3['hold_period'])}d  "
+      f"max_alloc={b3['max_alloc']:.0%}")
+print(f"  Sharpe={b3['Sharpe']:.3f}  Sortino={b3['Sortino']:.3f}  "
+      f"Return={b3['Total Return']:+.1%}  Max_DD={b3['Max DD']:.1%}")
+
 print(f"\nLeverage cost: 12%/yr × (leverage-1) deducted daily from leveraged MR returns")
+print(f"Dynamic alloc: proportional to lookback cumulative return, capped at max_alloc per strategy")

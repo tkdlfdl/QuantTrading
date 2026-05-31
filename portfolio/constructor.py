@@ -42,29 +42,58 @@ def _make_weight_grid(names: list[str], step: float = 0.1) -> list[dict]:
     return weights
 
 
+def _apply_max_alloc(weights: dict, max_alloc: float) -> dict:
+    """
+    Cap each strategy weight at max_alloc, redistributing excess
+    proportionally to the remaining uncapped strategies. Iterates
+    until stable (handles cascading caps).
+    """
+    if max_alloc >= 1.0:
+        return weights
+    w = {k: float(v) for k, v in weights.items()}
+    for _ in range(len(w) + 1):
+        capped   = {k: min(v, max_alloc) for k, v in w.items()}
+        excess   = sum(w[k] - capped[k] for k in w)
+        if excess < 1e-9:
+            return capped
+        uncapped = {k: v for k, v in capped.items() if v < max_alloc - 1e-9}
+        u_total  = sum(uncapped.values())
+        if u_total <= 0:
+            return capped
+        for k in uncapped:
+            capped[k] += excess * capped[k] / u_total
+        w = capped
+    return w
+
+
 def _momentum_weights(
     returns: pd.DataFrame,
     lookback: int,
     i: int,
+    max_alloc: float = 1.0,
 ) -> dict[str, float]:
     """
     Compute allocation weights at rebalancing point i based on
     recent cumulative return over [i-lookback, i].
     Positive performance only; if all negative → equal weight.
+    max_alloc caps any single strategy's weight.
     """
     window = returns.iloc[max(0, i - lookback):i]
     if len(window) == 0:
-        return {col: 1 / len(returns.columns) for col in returns.columns}
+        n = len(returns.columns)
+        return _apply_max_alloc({col: 1/n for col in returns.columns}, max_alloc)
 
     cum_ret = (1 + window).prod() - 1
     pos     = cum_ret.clip(lower=0)
     total   = pos.sum()
 
     if total > 0:
-        return (pos / total).to_dict()
+        raw = (pos / total).to_dict()
     else:
-        # All strategies negative — equal weight
-        return {col: 1 / len(returns.columns) for col in returns.columns}
+        n   = len(returns.columns)
+        raw = {col: 1/n for col in returns.columns}
+
+    return _apply_max_alloc(raw, max_alloc)
 
 
 def run_portfolio_allocation(
@@ -75,8 +104,9 @@ def run_portfolio_allocation(
     weight_step: float = 0.1,          # granularity of weight grid
 
     # Momentum allocation
-    lookback_grid: list = [20, 40, 60, 120],
+    lookback_grid: list    = [20, 40, 60, 120],
     hold_period_grid: list = [5, 10, 20, 40],
+    max_alloc_grid: list   = [1.0],   # max weight per strategy (1.0 = uncapped)
 
     trading_days: int = 252,
 ) -> tuple:
@@ -143,9 +173,12 @@ def run_portfolio_allocation(
 
     # ── Momentum-based allocation ──────────────────────────────────────────
     if method in ("momentum", "both"):
-        print(f"Momentum: testing {len(lookback_grid) * len(hold_period_grid)} combos...")
+        n_mom = len(lookback_grid) * len(hold_period_grid) * len(max_alloc_grid)
+        print(f"Momentum: testing {n_mom} combos "
+              f"({len(lookback_grid)} lookback × {len(hold_period_grid)} hold × "
+              f"{len(max_alloc_grid)} max_alloc)...")
 
-        for lookback, hold_period in product(lookback_grid, hold_period_grid):
+        for lookback, hold_period, max_alloc in product(lookback_grid, hold_period_grid, max_alloc_grid):
             if lookback >= len(ret_df):
                 continue
 
@@ -153,7 +186,7 @@ def run_portfolio_allocation(
             weights_rows   = []
 
             for i in range(lookback, len(ret_df) - 1, hold_period):
-                weights    = _momentum_weights(ret_df, lookback, i)
+                weights    = _momentum_weights(ret_df, lookback, i, max_alloc)
                 hold_end   = min(i + hold_period, len(ret_df))
                 hold_dates = ret_df.index[i:hold_end]
 
@@ -179,6 +212,7 @@ def run_portfolio_allocation(
                 "method":      "momentum",
                 "lookback":    lookback,
                 "hold_period": hold_period,
+                "max_alloc":   max_alloc,
                 **{f"w_{n}": "-" for n in names},
                 "Sharpe":      sharpe,
                 "Sortino":     sortino,
