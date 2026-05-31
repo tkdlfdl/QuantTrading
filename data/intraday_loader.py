@@ -98,7 +98,7 @@ def load_hourly_bars(
         missing = [t for t in tickers if t not in ho.columns]
         # also refresh if data is older than 1 day
         last_ts = ho.index[-1]
-        data_age_days = (datetime.now() - last_ts).days
+        data_age_days = (datetime.now().date() - last_ts.date()).days
         if not missing and data_age_days < 2:
             print(f"Hourly bars: loaded {len(ho.columns)} tickers from cache (last: {last_ts.date()}).")
             return ho[tickers], hc[tickers]
