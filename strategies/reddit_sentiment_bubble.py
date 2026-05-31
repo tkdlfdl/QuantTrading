@@ -68,8 +68,8 @@ def run_reddit_sentiment_bubble(
     min_mentions: int = 5,
     trading_days: int = 252,
     transaction_cost: float = 0.001,  # 0.1% round-trip per position per rebalance
-    cash_rate:         float = 0.05,  # annual yield earned on idle cash (T-bill/CD)
-    short_borrow_rate: float = 0.08,  # annual borrowing cost for short positions
+    cash_rate:         float = 0.02,  # annual yield earned on idle cash (2% CD/savings)
+    short_borrow_rate: float = 0.08,  # annual borrowing cost for short positions (8%)
 ) -> tuple:
     """
     4-zone regime strategy — combines trend-following AND contrarian:
