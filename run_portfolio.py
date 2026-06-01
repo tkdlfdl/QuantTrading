@@ -31,7 +31,7 @@ import requests
 from io import StringIO
 
 from data.db.schema import init
-from data.universe import get_universe
+from data.universe import get_universe, get_top_by_marketcap
 from data.sentiment.aggregator import load_sentiment_panel
 from strategies.momentum_bubble_hedge import run_momentum_bubble_hedge_and_low_bubble_leverage
 from strategies.reddit_sentiment_bubble import run_reddit_sentiment_bubble
@@ -100,10 +100,10 @@ def get_momentum_returns(start: str) -> pd.Series:
 
 
 def get_reddit_returns(start: str) -> pd.Series:
-    """Run Reddit sentiment strategy — full NASDAQ100 + S&P500 universe."""
+    """Run Reddit sentiment strategy — top-50 by market cap (best signal quality)."""
     print("\n=== Running Reddit Sentiment strategy ===")
-    universe = get_universe()
-    print(f"Universe: {len(universe)} tickers")
+    universe = get_top_by_marketcap(get_universe(), n=50)
+    print(f"Universe: {len(universe)} tickers (top-50 by mktcap)")
     raw      = yf.download(tickers=universe, start=start, progress=False, auto_adjust=True)
     price    = raw["Close"].ffill().dropna(axis="columns")
     sent     = load_sentiment_panel(universe, start=start)

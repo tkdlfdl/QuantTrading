@@ -65,7 +65,8 @@ def run_reddit_sentiment_bubble(
     z_window_grid:         list = [60, 120],
     sentiment_scale_grid:  list = [0.05],
 
-    min_mentions: int = 5,
+    min_mentions: int = 5,           # cumulative posts up to signal date
+    min_coverage_days: int = 0,      # min non-zero sentiment days in z_window lookback
     trading_days: int = 252,
     transaction_cost: float = 0.001,  # 0.1% round-trip per position per rebalance
     cash_rate:         float = 0.02,  # annual yield earned on idle cash (2% CD/savings)
@@ -142,10 +143,17 @@ def run_reddit_sentiment_bubble(
         for i in range(warmup, len(common_dates) - holding_period, holding_period):
             signal_date = common_dates[i]
 
-            # Universe filter: only include symbols that had >= min_mentions
-            # posts UP TO (and not including) signal_date → no lookahead in universe
+            # Universe filter 1: cumulative mentions up to signal_date (no lookahead)
             eligible = cumulative_mentions.loc[common_dates[i - 1]]
             eligible = eligible[eligible >= min_mentions].index
+
+            # Universe filter 2: require min_coverage_days non-zero sentiment days
+            # within the most recent z_window days (no lookahead)
+            if min_coverage_days > 0 and len(eligible) > 0:
+                window_start = max(0, i - z_window - 1)
+                coverage = (sent.loc[common_dates[window_start:i], eligible] != 0).sum()
+                eligible = coverage[coverage >= min_coverage_days].index
+
             scores = signal_scores.loc[signal_date, eligible].dropna()
 
             if scores.empty:
