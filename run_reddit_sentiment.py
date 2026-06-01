@@ -46,15 +46,29 @@ def build_universe() -> list[str]:
 
 
 # ── Step 2: Fetch sentiment ────────────────────────────────────────────────
+def _already_fetched(sym: str) -> bool:
+    """Return True if this ticker already has sentiment posts in the DB."""
+    from data.db.client import get_conn
+    conn = get_conn()
+    n = conn.execute(
+        "SELECT COUNT(*) FROM sentiment_posts WHERE symbol = ?", [sym]
+    ).fetchone()[0]
+    return n > 0
+
+
 def fetch_sentiment(symbols: list[str]) -> None:
     """
     Two no-credential sources:
       1. GDELT — historical news back to 2022, VADER scored
       2. Yahoo Finance news — recent articles (top-up)
+    Skips tickers that already have data in the DB (safe to resume after interruption).
     """
     import pandas as pd
     total = 0
     for i, sym in enumerate(symbols):
+        if _already_fetched(sym):
+            print(f"  [{i+1}/{len(symbols)}] {sym}... SKIP (already in DB)")
+            continue
         print(f"  [{i+1}/{len(symbols)}] {sym}...", end=" ", flush=True)
         dfs = []
 
