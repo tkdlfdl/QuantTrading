@@ -1,13 +1,14 @@
 """
-3-Strategy Combined Portfolio
+4-Strategy Combined Portfolio
 ==============================
 Strategies:
   1. Momentum + UVXY Hedge + Leverage (daily)
   2. Reddit Sentiment Bubble (daily)
   3. Intraday Mean-Reversion + Flip (1h signal, best params)
+  4. QQQ Hourly Bubble Score — long-only (ma=100h, z=200h, thresh=0.9, hold=4h)
 
 Three portfolio options:
-  Option 1 — Fixed weight grid search (step=0.2, all 3 strategies)
+  Option 1 — Fixed weight grid search (step=0.2, all 4 strategies)
   Option 2 — Leverage on Intraday MR (grid 1-3x, 12%/yr cost),
              then fixed-weight combine with Momentum + Reddit
   Option 3 — Dynamic momentum-based allocation with lookback × hold × max_alloc grid
@@ -31,10 +32,12 @@ import numpy as np
 import pandas as pd
 from itertools import product
 
+from datetime import datetime, timedelta
 from data.db.schema import init
 from data.universe import get_universe
 from data.intraday_loader import load_daily_close, load_hourly_bars
 from strategies.intraday_mean_reversion import run_intraday_mean_reversion
+from strategies.qqq_bubble_hourly import run_qqq_bubble_hourly
 from portfolio.constructor import run_portfolio_allocation
 from run_portfolio import get_momentum_returns, get_reddit_returns, START
 
@@ -90,6 +93,17 @@ def _print_header(title: str):
     print("=" * 70)
 
 
+# ── QQQ Bubble best params ─────────────────────────────────────────────────
+QQQ_PARAMS = dict(
+    ma_window_grid   = [100],
+    z_window_grid    = [200],
+    threshold_grid   = [0.9],
+    hold_hours_grid  = [4],
+    transaction_cost = 0.001,
+    short_borrow_rate= 0.08,
+    enable_short     = False,   # long-only
+)
+
 # ── Get strategy returns ───────────────────────────────────────────────────
 
 init()
@@ -97,13 +111,13 @@ print("=" * 70)
 print("STEP 1 — Loading strategy returns")
 print("=" * 70)
 
-print("\n[1/3] Momentum strategy...")
+print("\n[1/4] Momentum strategy...")
 mom_ret = get_momentum_returns(START)
 
-print("\n[2/3] Reddit Sentiment strategy...")
+print("\n[2/4] Reddit Sentiment strategy...")
 reddit_ret = get_reddit_returns(START)
 
-print("\n[3/3] Intraday MR strategy (best params: σ=4, flip=2d, lb=20d)...")
+print("\n[3/4] Intraday MR strategy (σ=4, flip=2d, lb=20d)...")
 universe = get_universe()
 daily_close = load_daily_close(universe, use_cache=True)
 hourly_open, hourly_close = load_hourly_bars(universe, use_cache=True)
@@ -115,16 +129,37 @@ mr_ret_raw, mr_params, _ = run_intraday_mean_reversion(
 )
 mr_ret = mr_ret_raw.rename("IntradayMR")
 
-# Align to common date range
-common_idx = mom_ret.index.intersection(reddit_ret.index).intersection(mr_ret.index)
+print("\n[4/4] QQQ Bubble strategy (ma=100h, z=200h, thresh=0.9, hold=4h, long-only)...")
+import yfinance as yf
+qqq_start = (datetime.now() - timedelta(days=729)).strftime("%Y-%m-%d")
+qqq_raw   = yf.download("QQQ", start=qqq_start, interval="1h",
+                         progress=False, auto_adjust=True)
+if isinstance(qqq_raw.columns, pd.MultiIndex):
+    qqq_raw.columns = qqq_raw.columns.get_level_values(0)
+if qqq_raw.index.tz is not None:
+    qqq_raw.index = qqq_raw.index.tz_localize(None)
+qqq_ho = qqq_raw["Open"].ffill()
+qqq_hc = qqq_raw["Close"].ffill()
+qqq_daily_raw, _, _ = run_qqq_bubble_hourly(
+    hourly_open=qqq_ho, hourly_close=qqq_hc, **QQQ_PARAMS
+)
+qqq_ret = qqq_daily_raw.rename("QQQBubble")
+
+# Align all four to common date range
+common_idx = (mom_ret.index
+              .intersection(reddit_ret.index)
+              .intersection(mr_ret.index)
+              .intersection(qqq_ret.index))
 mom_ret    = mom_ret.loc[common_idx]
 reddit_ret = reddit_ret.loc[common_idx]
 mr_ret     = mr_ret.loc[common_idx]
+qqq_ret    = qqq_ret.loc[common_idx]
 
 print(f"\nCommon period: {common_idx[0].date()} to {common_idx[-1].date()} ({len(common_idx)} days)")
-print(f"  Momentum  Sharpe: {_sharpe(mom_ret):.3f}  Return: {(1+mom_ret).prod()-1:+.1%}")
-print(f"  Reddit    Sharpe: {_sharpe(reddit_ret):.3f}  Return: {(1+reddit_ret).prod()-1:+.1%}")
+print(f"  Momentum   Sharpe: {_sharpe(mom_ret):.3f}  Return: {(1+mom_ret).prod()-1:+.1%}")
+print(f"  Reddit     Sharpe: {_sharpe(reddit_ret):.3f}  Return: {(1+reddit_ret).prod()-1:+.1%}")
 print(f"  IntradayMR Sharpe: {_sharpe(mr_ret):.3f}  Return: {(1+mr_ret).prod()-1:+.1%}")
+print(f"  QQQBubble  Sharpe: {_sharpe(qqq_ret):.3f}  Return: {(1+qqq_ret).prod()-1:+.1%}")
 
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -133,7 +168,7 @@ print(f"  IntradayMR Sharpe: {_sharpe(mr_ret):.3f}  Return: {(1+mr_ret).prod()-1
 
 _print_header("OPTION 1: Fixed Weight Grid Search (step=20%)")
 
-names   = ["Momentum", "Reddit", "IntradayMR"]
+names   = ["Momentum", "Reddit", "IntradayMR", "QQQBubble"]
 combos  = _weight_grid(names, WEIGHT_STEP)
 print(f"Testing {len(combos)} weight combinations...\n")
 
@@ -141,23 +176,26 @@ rows_opt1 = []
 for w in combos:
     port = (mom_ret    * w["Momentum"]
           + reddit_ret * w["Reddit"]
-          + mr_ret     * w["IntradayMR"])
+          + mr_ret     * w["IntradayMR"]
+          + qqq_ret    * w["QQQBubble"])
     s = _stats(port)
     rows_opt1.append({**w, **s})
 
 df1 = pd.DataFrame(rows_opt1).sort_values("Sharpe", ascending=False)
 
-print(f"{'w_Mom':>6} {'w_Red':>6} {'w_MR':>6} | "
+print(f"{'w_Mom':>6} {'w_Red':>6} {'w_MR':>6} {'w_QQQ':>6} | "
       f"{'Sharpe':>7} {'Sortino':>8} {'Return':>8} {'Max_DD':>8}")
-print("-" * 60)
+print("-" * 68)
 for _, r in df1.head(15).iterrows():
-    print(f"{r['Momentum']:>6.0%} {r['Reddit']:>6.0%} {r['IntradayMR']:>6.0%} | "
+    print(f"{r['Momentum']:>6.0%} {r['Reddit']:>6.0%} {r['IntradayMR']:>6.0%} "
+          f"{r['QQQBubble']:>6.0%} | "
           f"{r['Sharpe']:>7.3f} {r['Sortino']:>8.3f} {r['Return']:>8.1%} {r['Max_DD']:>8.1%}")
 
 best1 = df1.iloc[0]
 best1_ret = (mom_ret    * best1["Momentum"]
            + reddit_ret * best1["Reddit"]
-           + mr_ret     * best1["IntradayMR"])
+           + mr_ret     * best1["IntradayMR"]
+           + qqq_ret    * best1["QQQBubble"])
 
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -184,10 +222,11 @@ for lev in LEVERAGE_GRID:
           f"Return={lev_stats['Return']:+.1%}  "
           f"Max_DD={lev_stats['Max_DD']:.1%}")
 
-    for w in _weight_grid(["Momentum", "Reddit", "IntradayMR"], WEIGHT_STEP):
+    for w in _weight_grid(["Momentum", "Reddit", "IntradayMR", "QQQBubble"], WEIGHT_STEP):
         port = (mom_ret    * w["Momentum"]
               + reddit_ret * w["Reddit"]
-              + lev_mr     * w["IntradayMR"])
+              + lev_mr     * w["IntradayMR"]
+              + qqq_ret    * w["QQQBubble"])
         s = _stats(port)
         rows_opt2.append({"leverage": lev, **w, **s})
 
@@ -265,7 +304,8 @@ print(f"Grid: {len(DYN_LOOKBACK)} lookback × {len(DYN_HOLD)} hold × "
 
 (_, yearly_dyn, best_dyn_ret, best_dyn_wealth,
  best_dyn_weights, grid_dyn, best_dyn_params) = run_portfolio_allocation(
-    returns_dict={"Momentum": mom_ret, "Reddit": reddit_ret, "IntradayMR": mr_ret},
+    returns_dict={"Momentum": mom_ret, "Reddit": reddit_ret,
+                  "IntradayMR": mr_ret, "QQQBubble": qqq_ret},
     method="momentum",
     lookback_grid=DYN_LOOKBACK,
     hold_period_grid=DYN_HOLD,

@@ -48,7 +48,7 @@ best_ret, best_params, grid_df = run_qqq_bubble_hourly(
     hold_hours_grid  = [1, 2, 4, 8, 24],
     transaction_cost = 0.001,
     short_borrow_rate = 0.08,
-    enable_short     = True,
+    enable_short     = False,   # long-only: buy extreme oversold only
 )
 
 # ── Print results ──────────────────────────────────────────────────────────
