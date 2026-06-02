@@ -42,18 +42,20 @@ print(f"Bars: {len(hc)}  |  {hc.index[0].date()} → {hc.index[-1].date()}")
 best_ret, best_params, grid_df = run_qqq_bubble_hourly(
     hourly_open  = ho,
     hourly_close = hc,
-    ma_window_grid  = [20, 50, 100],
-    z_window_grid   = [50, 100, 200],
-    threshold_grid  = [0.5, 0.6, 0.7, 0.8, 0.9],
-    hold_hours_grid = [1, 2, 4, 8, 24],
+    ma_window_grid   = [20, 50, 100],
+    z_window_grid    = [50, 100, 200],
+    threshold_grid   = [0.5, 0.6, 0.7, 0.8, 0.9],
+    hold_hours_grid  = [1, 2, 4, 8, 24],
     transaction_cost = 0.001,
+    short_borrow_rate = 0.08,
+    enable_short     = True,
 )
 
 # ── Print results ──────────────────────────────────────────────────────────
 S = "=" * 72
 print(f"\n{S}\nTOP 20 PARAMETER COMBOS (by Sharpe)\n{S}")
 cols = ["ma_window","z_window","threshold","hold_hours",
-        "Sharpe","Sortino","Total_Return","Max_DD","n_trades","Win_Rate"]
+        "Sharpe","Sortino","Total_Return","Max_DD","n_trades","n_long","n_short","Win_Rate"]
 print(grid_df[cols].head(20).to_string(index=False))
 
 # QQQ buy-and-hold benchmark

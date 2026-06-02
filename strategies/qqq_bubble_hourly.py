@@ -4,7 +4,8 @@ QQQ Hourly Bubble Score Strategy
 Apply bubble score proxy directly to QQQ hourly close prices.
 
 Signal (no lookahead — score at bar T uses data through T, signal fires at T+1 open):
-  bubble_score < -threshold  →  LONG QQQ at next bar open, hold X hours
+  bubble_score < -threshold  →  LONG  QQQ at next bar open, hold X hours
+  bubble_score > +threshold  →  SHORT QQQ at next bar open, hold X hours
 
 Bubble score formula (same as reddit strategy):
   residual  = log(close) − log(rolling_mean(close, ma_window))
@@ -40,9 +41,11 @@ def run_qqq_bubble_hourly(
     hourly_close: pd.Series,                    # QQQ hourly close prices
     ma_window_grid:  list = [20, 50, 100],      # hours for rolling MA
     z_window_grid:   list = [50, 100, 200],     # hours for z-score window
-    threshold_grid:  list = [0.5, 0.6, 0.7, 0.8, 0.9],  # entry threshold (long when score < -thresh)
+    threshold_grid:  list = [0.5, 0.6, 0.7, 0.8, 0.9],  # entry threshold
     hold_hours_grid: list = [1, 2, 4, 8, 24],  # bars to hold after entry
-    transaction_cost: float = 0.001,            # 0.1% round-trip
+    transaction_cost: float = 0.001,            # 0.1% round-trip per trade
+    short_borrow_rate: float = 0.08,            # 8%/yr borrowing cost on short positions
+    enable_short: bool = True,                  # trade short side (score > +threshold)
 ) -> tuple[pd.Series, dict, pd.DataFrame]:
     """
     Returns
@@ -78,6 +81,9 @@ def run_qqq_bubble_hourly(
         # Shift by 1 bar: signal at bar i uses score from bar i-1 (no lookahead)
         signal_scores = raw_scores.shift(1)
 
+        # Hourly short borrow cost
+        hourly_borrow = short_borrow_rate / (252 * 6.5)
+
         trades: list[dict] = []
         in_trade_until = -1   # bar index — no new trade while in_trade_until > current
 
@@ -86,22 +92,30 @@ def run_qqq_bubble_hourly(
                 continue
 
             sig = signal_scores.iloc[i]
-            if pd.isna(sig) or sig >= -thresh:
+            if pd.isna(sig):
                 continue
 
-            # Entry at open of bar i
+            # Determine trade direction
+            if sig < -thresh:
+                direction = 1   # LONG
+            elif enable_short and sig > thresh:
+                direction = -1  # SHORT
+            else:
+                continue
+
+            # Entry at open of bar i, exit at close of bar i+hold-1
             entry_price = ho.iloc[i]
-            # Exit at close of bar i + hold - 1
             exit_idx    = min(i + hold - 1, n - 1)
             exit_price  = hc.iloc[exit_idx]
 
             if entry_price <= 0 or pd.isna(entry_price) or pd.isna(exit_price):
                 continue
 
-            raw_ret  = (exit_price / entry_price - 1)
-            net_ret  = raw_ret - transaction_cost
-            entry_dt = ho.index[i]
-            exit_dt  = hc.index[exit_idx]
+            raw_ret    = (exit_price / entry_price - 1) * direction
+            borrow_cost = hourly_borrow * hold if direction == -1 else 0.0
+            net_ret    = raw_ret - transaction_cost - borrow_cost
+            entry_dt   = ho.index[i]
+            exit_dt    = hc.index[exit_idx]
 
             trades.append({
                 "entry_bar":  i,
@@ -110,7 +124,9 @@ def run_qqq_bubble_hourly(
                 "exit_dt":    exit_dt,
                 "entry_price":entry_price,
                 "exit_price": exit_price,
+                "direction":  "LONG" if direction == 1 else "SHORT",
                 "raw_ret":    raw_ret,
+                "borrow":     borrow_cost,
                 "net_ret":    net_ret,
                 "score":      sig,
             })
@@ -142,11 +158,13 @@ def run_qqq_bubble_hourly(
         wr     = float((tdf["net_ret"] > 0).mean())
         tot    = float(wealth.iloc[-1] - 1)
 
+        n_long  = int((tdf["direction"] == "LONG").sum())
+        n_short = int((tdf["direction"] == "SHORT").sum())
         row = dict(
             ma_window=ma, z_window=z, threshold=thresh, hold_hours=hold,
             Sharpe=sh, Sortino=so, Total_Return=tot, Max_DD=mdd,
-            n_trades=len(trades), Win_Rate=wr,
-            Avg_Net_Ret=float(tdf["net_ret"].mean()),
+            n_trades=len(trades), n_long=n_long, n_short=n_short,
+            Win_Rate=wr, Avg_Net_Ret=float(tdf["net_ret"].mean()),
         )
         grid_results.append(row)
 
