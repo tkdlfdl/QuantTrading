@@ -1,7 +1,11 @@
 """
-Loads two layers of price data for the intraday mean-reversion strategy:
-  1. Daily close  — long history (from 2018) for signal lookback window
-  2. Hourly OHLCV — last 730 days (yfinance max) for trade execution
+Loads price data for intraday strategies.
+
+  1. Daily close  — long history (from 2018) for signal lookback
+  2. Hourly OHLCV — two sources merged:
+       a. Alpaca (free tier, IEX feed) — from 2016 to ~2 years ago
+       b. yfinance — last 730 days (max available)
+     Together they provide hourly bars back to 2016.
 """
 from __future__ import annotations
 
@@ -20,8 +24,11 @@ _HOURLY_O_CACHE = CACHE_DIR / "hourly_open.parquet"
 _HOURLY_C_CACHE = CACHE_DIR / "hourly_close.parquet"
 
 _CHUNK = 100          # tickers per yfinance batch
-_HRS_START = (datetime.now() - timedelta(days=729)).strftime("%Y-%m-%d")
+_HRS_START   = (datetime.now() - timedelta(days=729)).strftime("%Y-%m-%d")
 _DAILY_START = "2018-01-01"
+_ALPACA_START = "2016-01-01"   # Alpaca IEX free tier history start
+_ALPACA_O_CACHE = CACHE_DIR / "alpaca_hourly_open.parquet"
+_ALPACA_C_CACHE = CACHE_DIR / "alpaca_hourly_close.parquet"
 
 
 def _batch_download(tickers: list[str], chunk: int = _CHUNK, **kwargs) -> pd.DataFrame:
@@ -84,43 +91,123 @@ def load_daily_close(
     return close
 
 
-def load_hourly_bars(
+def load_alpaca_hourly_bars(
     tickers: list[str],
+    start: str = _ALPACA_START,
+    end: str | None = None,
+    api_key: str | None = None,
+    secret_key: str | None = None,
     use_cache: bool = True,
+    feed: str = "iex",
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
-    Hourly open and close prices for last 730 days.
-    Returns (hourly_open, hourly_close) with tz-naive DatetimeIndex.
+    Hourly bars from Alpaca free tier (IEX feed).
+    Provides history back to ~2016, complementing yfinance's 730-day limit.
+
+    Requires free Alpaca account: https://alpaca.markets
+    Set ALPACA_API_KEY and ALPACA_SECRET_KEY env vars, or pass directly.
     """
-    if use_cache and _HOURLY_O_CACHE.exists() and _HOURLY_C_CACHE.exists():
-        ho = pd.read_parquet(_HOURLY_O_CACHE)
-        hc = pd.read_parquet(_HOURLY_C_CACHE)
+    if use_cache and _ALPACA_O_CACHE.exists() and _ALPACA_C_CACHE.exists():
+        ho = pd.read_parquet(_ALPACA_O_CACHE)
+        hc = pd.read_parquet(_ALPACA_C_CACHE)
         missing = [t for t in tickers if t not in ho.columns]
-        # also refresh if data is older than 1 day
         last_ts = ho.index[-1]
         data_age_days = (datetime.now().date() - last_ts.date()).days
         if not missing and data_age_days < 7:
-            print(f"Hourly bars: loaded {len(ho.columns)} tickers from cache (last: {last_ts.date()}).")
+            print(f"Alpaca cache: {len(ho.columns)} tickers (last: {last_ts.date()}).")
             return ho[tickers], hc[tickers]
-        print(f"Hourly cache stale or missing {len(missing)} tickers — re-downloading.")
+        print(f"Alpaca cache stale or missing {len(missing)} tickers — re-downloading.")
 
-    print(f"Downloading 1h bars for {len(tickers)} tickers from {_HRS_START}...")
-    raw = _batch_download(tickers, start=_HRS_START, interval="1h", auto_adjust=True)
-    if raw.empty:
+    from data.fetchers.alpaca_fetcher import fetch_alpaca_bars
+    # Only fetch up to yfinance overlap point (avoid duplication)
+    alpaca_end = end or _HRS_START
+    print(f"Downloading Alpaca 1h bars ({start} → {alpaca_end}, feed={feed})...")
+    ho, hc = fetch_alpaca_bars(
+        tickers=tickers, start=start, end=alpaca_end,
+        timeframe="1Hour", feed=feed,
+        api_key=api_key, secret_key=secret_key,
+        chunk_size=50,
+    )
+    if ho.empty:
         return pd.DataFrame(), pd.DataFrame()
 
-    hourly_open  = _extract_price(raw, "Open",  tickers)
-    hourly_close = _extract_price(raw, "Close", tickers)
+    ho.to_parquet(_ALPACA_O_CACHE)
+    hc.to_parquet(_ALPACA_C_CACHE)
+    print(f"Alpaca: {len(ho)} bars × {len(ho.columns)} tickers saved.")
+    return ho, hc
 
-    for df in (hourly_open, hourly_close):
-        if df.index.tz is not None:
-            df.index = df.index.tz_localize(None)
 
-    common = list(set(hourly_open.columns) & set(hourly_close.columns))
-    hourly_open  = hourly_open[common].ffill()
-    hourly_close = hourly_close[common].ffill()
+def load_hourly_bars(
+    tickers: list[str],
+    use_cache: bool = True,
+    use_alpaca: bool = False,
+    alpaca_api_key: str | None = None,
+    alpaca_secret_key: str | None = None,
+    alpaca_feed: str = "iex",
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Hourly open and close prices.
+    If use_alpaca=True: merges Alpaca history (2016+) with yfinance (last 730d).
+    Otherwise: yfinance only (last 730 days).
+    Returns (hourly_open, hourly_close) with tz-naive DatetimeIndex.
+    """
+    # ── yfinance (recent 730 days) ─────────────────────────────────────────
+    yf_cached = use_cache and _HOURLY_O_CACHE.exists() and _HOURLY_C_CACHE.exists()
+    if yf_cached:
+        yf_ho = pd.read_parquet(_HOURLY_O_CACHE)
+        yf_hc = pd.read_parquet(_HOURLY_C_CACHE)
+        missing = [t for t in tickers if t not in yf_ho.columns]
+        last_ts = yf_ho.index[-1]
+        data_age_days = (datetime.now().date() - last_ts.date()).days
+        if not missing and data_age_days < 7:
+            print(f"yfinance cache: {len(yf_ho.columns)} tickers (last: {last_ts.date()}).")
+        else:
+            yf_cached = False
 
-    hourly_open.to_parquet(_HOURLY_O_CACHE)
-    hourly_close.to_parquet(_HOURLY_C_CACHE)
-    print(f"Hourly bars: {len(hourly_open)} bars × {len(common)} tickers saved.")
-    return hourly_open, hourly_close
+    if not yf_cached:
+        print(f"Downloading yfinance 1h bars from {_HRS_START}...")
+        raw = _batch_download(tickers, start=_HRS_START, interval="1h", auto_adjust=True)
+        if raw.empty:
+            return pd.DataFrame(), pd.DataFrame()
+        yf_ho = _extract_price(raw, "Open",  tickers)
+        yf_hc = _extract_price(raw, "Close", tickers)
+        for df in (yf_ho, yf_hc):
+            if df.index.tz is not None:
+                df.index = df.index.tz_localize(None)
+        common = list(set(yf_ho.columns) & set(yf_hc.columns))
+        yf_ho = yf_ho[common].ffill()
+        yf_hc = yf_hc[common].ffill()
+        yf_ho.to_parquet(_HOURLY_O_CACHE)
+        yf_hc.to_parquet(_HOURLY_C_CACHE)
+        print(f"yfinance: {len(yf_ho)} bars × {len(yf_ho.columns)} tickers saved.")
+
+    if not use_alpaca:
+        avail = [t for t in tickers if t in yf_ho.columns]
+        return yf_ho[avail], yf_hc[avail]
+
+    # ── Alpaca (extended history) ──────────────────────────────────────────
+    al_ho, al_hc = load_alpaca_hourly_bars(
+        tickers=tickers, start=_ALPACA_START, end=_HRS_START,
+        api_key=alpaca_api_key, secret_key=alpaca_secret_key,
+        use_cache=use_cache, feed=alpaca_feed,
+    )
+
+    if al_ho.empty:
+        print("Alpaca returned no data — falling back to yfinance only.")
+        avail = [t for t in tickers if t in yf_ho.columns]
+        return yf_ho[avail], yf_hc[avail]
+
+    # ── Merge: Alpaca (old) + yfinance (recent), prefer yfinance on overlap ─
+    print("Merging Alpaca + yfinance hourly bars...")
+    common = list(set(al_ho.columns) & set(yf_ho.columns))
+    merged_o = pd.concat([al_ho[common], yf_ho[common]]).sort_index()
+    merged_c = pd.concat([al_hc[common], yf_hc[common]]).sort_index()
+    # Remove duplicates — keep yfinance (last) on overlap
+    merged_o = merged_o[~merged_o.index.duplicated(keep="last")]
+    merged_c = merged_c[~merged_c.index.duplicated(keep="last")]
+    merged_o = merged_o.ffill()
+    merged_c = merged_c.ffill()
+
+    print(f"Merged: {len(merged_o)} bars × {len(common)} tickers  "
+          f"({merged_o.index[0].date()} → {merged_o.index[-1].date()})")
+    return merged_o, merged_c

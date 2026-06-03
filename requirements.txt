@@ -10,3 +10,4 @@ praw>=7.7.0
 vaderSentiment>=3.3.2
 pmaw>=3.0.0
 pyarrow>=14.0.0
+alpaca-py>=0.20.0
