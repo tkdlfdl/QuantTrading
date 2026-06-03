@@ -144,7 +144,8 @@ def run_universe_bubble_hourly(
         rows = [(hc.index[i].normalize(), r) for i, r in trade_rets]
         daily_s = (pd.DataFrame(rows, columns=["date","ret"])
                    .groupby("date")["ret"].sum())
-        all_dates  = pd.date_range(daily_s.index.min(), daily_s.index.max(), freq="B")
+        data_end  = hc.index[-1].normalize()
+        all_dates  = pd.date_range(daily_s.index.min(), data_end, freq="B")
         daily_full = daily_s.reindex(all_dates, fill_value=0.0)
 
         wealth = (1 + daily_full).cumprod(); wealth = wealth / wealth.iloc[0]

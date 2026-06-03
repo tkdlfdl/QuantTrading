@@ -145,9 +145,9 @@ def run_qqq_bubble_hourly(
         tdf["date"] = tdf["entry_dt"].dt.normalize()
         daily     = tdf.groupby("date")["net_ret"].sum()
 
-        # Annualize using hourly Sharpe
-        # Full daily index (fill non-trade days with 0)
-        all_dates = pd.date_range(daily.index.min(), daily.index.max(), freq="B")
+        # Extend through end of hourly data so idle days beyond last signal are included
+        data_end  = hc.index[-1].normalize()
+        all_dates = pd.date_range(daily.index.min(), data_end, freq="B")
         daily_full = daily.reindex(all_dates, fill_value=0.0)
 
         wealth = (1 + daily_full).cumprod(); wealth = wealth / wealth.iloc[0]
