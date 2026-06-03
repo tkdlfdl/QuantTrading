@@ -19,9 +19,11 @@ import yfinance as yf
 CACHE_DIR = Path(__file__).parent / "cache"
 CACHE_DIR.mkdir(exist_ok=True)
 
-_DAILY_CACHE  = CACHE_DIR / "daily_close.parquet"
-_HOURLY_O_CACHE = CACHE_DIR / "hourly_open.parquet"
+_DAILY_CACHE    = CACHE_DIR / "daily_close.parquet"
+_HOURLY_O_CACHE = CACHE_DIR / "hourly_open.parquet"       # yfinance-only (730d)
 _HOURLY_C_CACHE = CACHE_DIR / "hourly_close.parquet"
+_MERGED_O_CACHE = CACHE_DIR / "merged_hourly_open.parquet"  # Alpaca+yfinance (full history)
+_MERGED_C_CACHE = CACHE_DIR / "merged_hourly_close.parquet"
 
 _CHUNK = 100          # tickers per yfinance batch
 _HRS_START   = (datetime.now() - timedelta(days=729)).strftime("%Y-%m-%d")
@@ -182,6 +184,16 @@ def load_hourly_bars(
         print(f"yfinance: {len(yf_ho)} bars × {len(yf_ho.columns)} tickers saved.")
 
     if not use_alpaca:
+        # Check if merged cache already exists and is fresh
+        if (_MERGED_O_CACHE.exists() and _MERGED_C_CACHE.exists()):
+            mo = pd.read_parquet(_MERGED_O_CACHE)
+            mc = pd.read_parquet(_MERGED_C_CACHE)
+            missing_m = [t for t in tickers if t not in mo.columns]
+            age_m = (datetime.now().date() - mo.index[-1].date()).days
+            if not missing_m and age_m < 7:
+                print(f"Merged cache: {len(mo.columns)} tickers "
+                      f"({mo.index[0].date()} → {mo.index[-1].date()}).")
+                return mo[tickers], mc[tickers]
         avail = [t for t in tickers if t in yf_ho.columns]
         return yf_ho[avail], yf_hc[avail]
 
@@ -197,22 +209,36 @@ def load_hourly_bars(
         avail = [t for t in tickers if t in yf_ho.columns]
         return yf_ho[avail], yf_hc[avail]
 
-    # ── Merge: Alpaca (old) + yfinance (recent), prefer yfinance on overlap ─
-    print("Merging Alpaca + yfinance hourly bars...")
-    common = list(set(al_ho.columns) & set(yf_ho.columns))
-    merged_o = pd.concat([al_ho[common], yf_ho[common]]).sort_index()
-    merged_c = pd.concat([al_hc[common], yf_hc[common]]).sort_index()
-    # Remove duplicates — keep yfinance (last) on overlap
-    merged_o = merged_o[~merged_o.index.duplicated(keep="last")]
-    merged_c = merged_c[~merged_c.index.duplicated(keep="last")]
-    merged_o = merged_o.ffill()
-    merged_c = merged_c.ffill()
+    # ── Merge: extend yfinance history with Alpaca — keep ALL yfinance tickers ─
+    print("Merging Alpaca + yfinance (keeping all tickers)...")
 
-    print(f"Merged: {len(merged_o)} bars × {len(common)} tickers  "
+    # Base: all yfinance tickers
+    merged_o = yf_ho.copy()
+    merged_c = yf_hc.copy()
+
+    # Prepend Alpaca bars from before yfinance window
+    yf_start  = yf_ho.index[0]
+    al_hist_o = al_ho[al_ho.index < yf_start]
+    al_hist_c = al_hc[al_hc.index < yf_start]
+
+    if not al_hist_o.empty:
+        common_t = [t for t in al_hist_o.columns if t in merged_o.columns]
+        ext_idx  = al_hist_o.index.union(merged_o.index)
+        merged_o = merged_o.reindex(ext_idx)
+        merged_c = merged_c.reindex(ext_idx)
+        merged_o.loc[al_hist_o.index, common_t] = al_hist_o[common_t].values
+        merged_c.loc[al_hist_o.index, common_t] = al_hist_c[common_t].values
+        merged_o = merged_o.sort_index().ffill()
+        merged_c = merged_c.sort_index().ffill()
+        print(f"Extended {len(common_t)} tickers with Alpaca history "
+              f"({al_hist_o.index[0].date()} → {al_hist_o.index[-1].date()})")
+
+    n_tickers = len(merged_o.columns)
+    print(f"Merged: {len(merged_o)} bars × {n_tickers} tickers  "
           f"({merged_o.index[0].date()} → {merged_o.index[-1].date()})")
 
-    # Save merged result as the main cache so future calls use extended data
-    merged_o.to_parquet(_HOURLY_O_CACHE)
-    merged_c.to_parquet(_HOURLY_C_CACHE)
-    print("Merged bars saved to main hourly cache.")
+    # Save to dedicated merged cache (never overwrites yfinance-only cache)
+    merged_o.to_parquet(_MERGED_O_CACHE)
+    merged_c.to_parquet(_MERGED_C_CACHE)
+    print(f"Saved to {_MERGED_O_CACHE.name}")
     return merged_o, merged_c
