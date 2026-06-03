@@ -210,4 +210,9 @@ def load_hourly_bars(
 
     print(f"Merged: {len(merged_o)} bars × {len(common)} tickers  "
           f"({merged_o.index[0].date()} → {merged_o.index[-1].date()})")
+
+    # Save merged result as the main cache so future calls use extended data
+    merged_o.to_parquet(_HOURLY_O_CACHE)
+    merged_c.to_parquet(_HOURLY_C_CACHE)
+    print("Merged bars saved to main hourly cache.")
     return merged_o, merged_c
