@@ -181,7 +181,7 @@ class LiveBook:
             mom = S.daily_momentum_rank(daily[dcols], p["lookback_days"]).iloc[-1].dropna()
             ranked = mom.sort_values(ascending=False)
             a["longs"]  = ranked.head(p["top_n"]).index.tolist()
-            a["shorts"] = ranked.tail(p["top_n"]).index.tolist()
+            a["shorts"] = []   # Book A is long-only
             a["anchor"] = str(now.date())
         self.state["books"]["A"] = a
 

@@ -182,22 +182,13 @@ def replay_A(panels):
     for i in range(lookback + 1, len(ret_mom), holding):
         ranking = ret_mom.iloc[i-1:i].rank(axis=1, ascending=False)
         ranked  = np.argsort(ranking.values[0])
-        short_n = int(ret_mom.iloc[:, ranked[:top]].iloc[i-1:i].lt(0).sum().sum())
-        long_n  = top - short_n
-        if long_n <= 0:
-            continue
+        long_n  = top                      # Book A is long-only (no short leg)
         for j in range(i, min(i + holding, len(ret_mom))):
             date = ret_daily.index[j]
-            lret = sret = 0.0
-            if long_n > 0:
-                ls = np.sign(ret_mom.iloc[:, ranked[:long_n]].iloc[i-1:i]).abs()
-                lr = ls.mul(np.array(ret_daily.iloc[:, ranked[:long_n]].iloc[j:j+1])[0])
-                lret = lr.values.mean() * long_n
-            if short_n > 0:
-                ss = np.sign(ret_mom.iloc[:, ranked[-short_n:]].iloc[i-1:i]).abs() * -1
-                sr = ss.mul(np.array(ret_daily.iloc[:, ranked[-short_n:]].iloc[j:j+1])[0])
-                sret = sr.values.mean() * short_n
-            mom_r = (lret + sret) / top - p["tc_per_cycle"] / holding
+            ls = np.sign(ret_mom.iloc[:, ranked[:long_n]].iloc[i-1:i]).abs()
+            lr = ls.mul(np.array(ret_daily.iloc[:, ranked[:long_n]].iloc[j:j+1])[0])
+            lret = lr.values.mean() * long_n
+            mom_r = lret / top - p["tc_per_cycle"] / holding
             h_ret = 0.0
             if "UVXY" in close.columns and pd.notna(close.loc[date, "UVXY"]):
                 h_ret = ret_daily.loc[date, "UVXY"]
