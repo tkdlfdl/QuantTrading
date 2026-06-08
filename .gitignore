@@ -26,6 +26,13 @@ Thumbs.db
 # Secrets / API keys
 .env
 secrets.json
+alphaca.txt
+live/state/alpaca_creds.json
+
+# Live engine runtime artifacts (state, logs, reports) — never commit
+live/state/
+live/reports/
+*.log
 
 # Claude Code
 .claude/
