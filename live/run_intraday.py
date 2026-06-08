@@ -74,10 +74,13 @@ def _append_broker_equity(acct, diag, n_orders):
                nA=diag["n_open"]["A"], nB=diag["n_open"]["B"],
                nC=diag["n_open"]["C"], nD=diag["n_open"]["D"])
     df = pd.DataFrame([row])
-    if C.BROKER_EQUITY_FILE.exists():
-        df.to_csv(C.BROKER_EQUITY_FILE, mode="a", header=False, index=False)
-    else:
-        df.to_csv(C.BROKER_EQUITY_FILE, index=False)
+    try:
+        if C.BROKER_EQUITY_FILE.exists():
+            df.to_csv(C.BROKER_EQUITY_FILE, mode="a", header=False, index=False)
+        else:
+            df.to_csv(C.BROKER_EQUITY_FILE, index=False)
+    except PermissionError:
+        print("  [intraday] broker_equity.csv locked (concurrent run) — skipped this append.")
 
 
 def tick(live=False, force=False, verbose=True):
@@ -98,10 +101,11 @@ def tick(live=False, force=False, verbose=True):
 
     acct = broker.get_account()
     book = LB.LiveBook()
-    target_w, shares, prices, diag = book.tick(panels, dt.datetime.now(), bw, acct["equity"])
+    target_w, shares, prices, diag, attribution = book.tick(
+        panels, dt.datetime.now(), bw, acct["equity"])
     book.save()
 
-    orders = broker.reconcile(shares, prices)
+    orders = broker.reconcile(shares, prices, attribution)
     _append_broker_equity(acct, diag, len(orders))
 
     if verbose:

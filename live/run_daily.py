@@ -147,6 +147,16 @@ def main(argv=None):
     # ── Phase 3: report ─────────────────────────────────────────────
     print("Phase 3 — report")
     REPORT.render()
+
+    # ── Phase 4: EOD Excel report (live Alpaca account) — non-fatal ──
+    print("Phase 4 — EOD Excel report")
+    try:
+        from . import eod_report
+        eod_report.build()
+    except SystemExit:
+        print("  [eod] skipped (no Alpaca credentials).")
+    except Exception as e:
+        print(f"  [eod] skipped ({e}).")
     print("Done.")
 
 

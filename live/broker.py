@@ -64,13 +64,29 @@ class Broker:
             for r in rows:
                 f.write(json.dumps(r) + "\n")
 
+    # ── classify the trade action ────────────────────────────────────
+    @staticmethod
+    def _action(tgt, cur):
+        if cur == 0 and tgt > 0:   return "ENTER_LONG"
+        if cur == 0 and tgt < 0:   return "ENTER_SHORT"
+        if cur > 0 and tgt == 0:   return "EXIT_LONG"
+        if cur < 0 and tgt == 0:   return "EXIT_SHORT(cover)"
+        if cur > 0 and tgt > cur:  return "ADD_LONG"
+        if cur > 0 and tgt < cur:  return "TRIM_LONG"
+        if cur < 0 and tgt < cur:  return "ADD_SHORT"
+        if cur < 0 and tgt > cur:  return "TRIM_SHORT"
+        if (cur > 0 and tgt < 0) or (cur < 0 and tgt > 0): return "FLIP"
+        return "ADJUST"
+
     # ── reconcile target shares vs held ──────────────────────────────
-    def reconcile(self, target_shares: dict, prices: dict) -> list:
+    def reconcile(self, target_shares: dict, prices: dict, attribution: dict = None) -> list:
         """
         target_shares : {symbol: signed int shares}  (negative = short)
         prices        : {symbol: last price} for min-notional checks
+        attribution   : {symbol: {book, signal, desc}} for the action log
         Returns the list of order dicts (submitted or dry-run logged).
         """
+        attribution = attribution or {}
         held = self.get_positions()
         symbols = set(target_shares) | set(held)
         ts = dt.datetime.now().isoformat(timespec="seconds")
@@ -88,7 +104,11 @@ class Broker:
             side = "buy" if delta > 0 else "sell"
             qty = abs(delta)
             mode = "LIVE" if self.live else "DRYRUN"
+            a = attribution.get(sym, {})
             order = dict(ts=ts, symbol=sym, side=side, qty=qty,
+                         action=self._action(tgt, cur),
+                         book=a.get("book", "?"), signal=a.get("signal"),
+                         signal_desc=a.get("desc", ""),
                          target=tgt, current=cur, price=px,
                          notional=round(qty * px, 2), mode=mode)
 

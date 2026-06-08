@@ -90,6 +90,8 @@ class LiveBook:
             shares[sym] = int(round(w * equity / px))
         shares = {k: v for k, v in shares.items() if v != 0}
 
+        attribution = self._attribution(panels, pos)
+
         self.state["last_tick"] = str(now)
         diag = dict(now=str(now), n_target=len(shares),
                     gross=round(sum(abs(v) for v in target_w.values()), 3),
@@ -98,7 +100,45 @@ class LiveBook:
                                 B=len(self.state["books"]["B"]),
                                 C=len(self.state["books"]["C"]),
                                 D=len(self.state["books"]["D"])))
-        return target_w, shares, prices, diag
+        return target_w, shares, prices, diag, attribution
+
+    # ─────────────────────────────────────────────────────────────────
+    # ATTRIBUTION: for each held symbol -> (book, signal value, description)
+    # ─────────────────────────────────────────────────────────────────
+    def _attribution(self, panels, pos):
+        hc, daily, tickers = panels["hourly_close"], panels["daily_close"], panels["tickers"]
+        attr = {}
+
+        # Book A — 140d momentum rank
+        a = self.state["books"]["A"]
+        if a.get("longs") or a.get("shorts"):
+            dcols = [t for t in tickers if t in daily.columns]
+            mom = S.daily_momentum_rank(daily[dcols], C.PARAMS["A"]["lookback_days"]).iloc[-1]
+            ranks = {s: i + 1 for i, s in enumerate(mom.sort_values(ascending=False).index)}
+            for s in a.get("longs", []):
+                attr[s] = dict(book="A", signal=round(float(mom.get(s, float("nan"))), 4),
+                               desc=f"140d momentum #{ranks.get(s,'?')} ({mom.get(s,0)*100:.0f}%)")
+            for s in a.get("shorts", []):
+                attr[s] = dict(book="A", signal=round(float(mom.get(s, float("nan"))), 4),
+                               desc=f"140d momentum bottom ({mom.get(s,0)*100:.0f}%)")
+
+        # Book D — current bubble score
+        if self.state["books"]["D"]:
+            bub = S.bubble_score_hourly(hc, C.PARAMS["D"]["bubble_ma_hours"]).iloc[pos]
+            for x in self.state["books"]["D"]:
+                s = x["symbol"]
+                attr[s] = dict(book="D", signal=round(float(bub.get(s, float("nan"))), 4),
+                               desc=f"bubble {bub.get(s,0):.2f} (buy dip <-0.8)")
+
+        # Book B — momentum picks under QQQ regime
+        for x in self.state["books"]["B"]:
+            attr.setdefault(x["symbol"], dict(book="B", signal=None, desc="QQQ bubble<-0.8 momentum buy"))
+
+        # Book C — Z-score flip
+        for x in self.state["books"]["C"]:
+            attr.setdefault(x["symbol"], dict(book="C", signal=x.get("side"),
+                                              desc=f"Z-flip side={x.get('side')}"))
+        return attr
 
     # ─────────────────────────────────────────────────────────────────
     # BOOK D — long contrarian, hold 13h
