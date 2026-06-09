@@ -128,3 +128,62 @@ def daily_bubble_on_curve(equity: pd.Series, ma_days: int, z_days: int) -> pd.Se
     r    = lp - fair
     z    = (r - r.rolling(z_days).mean()) / r.rolling(z_days).std()
     return np.tanh(z / 2)
+
+
+# ─────────────────────────────────────────────────────────────────────
+# BOOK E — Reddit sentiment long-only signal (capitulation + moderate hype)
+# ─────────────────────────────────────────────────────────────────────
+def sentiment_longs(price_universe):
+    """
+    Returns (longs, info) for Book E using the latest available Reddit sentiment.
+    longs = list of symbols to hold; info = dict with the signal date + per-symbol score.
+    NOTE: reads static sentiment_daily — needs a daily refresh pipeline to stay current.
+    """
+    p = C.PARAMS["E"]
+    try:
+        import duckdb
+    except Exception:
+        return [], {"error": "duckdb unavailable"}
+    if not C.SENTIMENT_DB.exists():
+        return [], {"error": "sentiment db missing"}
+
+    con = duckdb.connect(str(C.SENTIMENT_DB), read_only=True)
+    sd = con.execute("select date, symbol, weighted_compound, mention_count "
+                     "from sentiment_daily").df()
+    con.close()
+    if sd.empty:
+        return [], {"error": "no sentiment rows"}
+    sd["date"] = pd.to_datetime(sd["date"])
+    sent = sd.pivot_table(index="date", columns="symbol",
+                          values="weighted_compound", aggfunc="mean")
+    ment = sd.pivot_table(index="date", columns="symbol",
+                          values="mention_count", aggfunc="sum").fillna(0)
+
+    cal = pd.bdate_range(sent.index.min(), sent.index.max())
+    syms = [s for s in sent.columns if s in price_universe]
+    if not syms:
+        return [], {"error": "no overlap with price universe"}
+    sent = sent.reindex(cal)[syms]
+    cum = (ment.reindex(cal)[syms].fillna(0) > 0).cumsum()
+
+    # per-symbol sentiment-index bubble score, latest row
+    idx = pd.DataFrame(index=cal, columns=syms, dtype=float)
+    for s in syms:
+        si = 100.0 * (1 + sent[s].fillna(0).clip(-1, 1) * p["sentiment_scale"]).cumprod()
+        lp = np.log(si.replace(0, np.nan).ffill())
+        fair = si.rolling(p["ma_window"]).mean()
+        res = lp - np.log(fair)
+        z = (res - res.rolling(p["z_window"]).mean()) / res.rolling(p["z_window"]).std()
+        idx[s] = np.tanh(z / 2)
+
+    score = idx.iloc[-1]                              # latest sentiment bubble score
+    elig = cum.iloc[-1]
+    elig = elig[elig >= p["min_mentions"]].index
+    score = score[elig].dropna()
+    cap  = score[score < -p["extreme"]].nsmallest(p["top_n"])              # capitulation
+    momo = score[(score > p["mild"]) & (score <= p["extreme"])].nlargest(p["top_n"])
+    longs = list(pd.concat([cap, momo]).drop_duplicates().index)
+    info = {"signal_date": str(cal[-1].date()),
+            "scores": {s: round(float(score.get(s, float("nan"))), 3) for s in longs},
+            "n_capitulation": len(cap), "n_momentum": len(momo)}
+    return longs, info

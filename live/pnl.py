@@ -36,6 +36,7 @@ def _book_map():
         for x in b.get("B", []): m[x["symbol"]] = "B"
         for x in b.get("C", []): m[x["symbol"]] = "C"
         for x in b.get("D", []): m[x["symbol"]] = "D"
+        for s in b.get("E", {}).get("longs", []): m[s] = "E"
     return m
 
 
@@ -89,7 +90,7 @@ def main(argv=None):
         by[b] = by.get(b, 0.0) + float(p.unrealized_pl)
     print("  " + "-" * 40)
     labels = {"A": "Momentum", "B": "QQQ Bubble", "C": "Intraday MR",
-              "D": "Contrarian", "?": "Unattributed"}
+              "D": "Contrarian", "E": "Reddit Sentiment", "?": "Unattributed"}
     print("  P&L by book:")
     for b in sorted(by):
         print("    {} ({:<11}): {:>+9,.0f}".format(b, labels.get(b, b), by[b]))

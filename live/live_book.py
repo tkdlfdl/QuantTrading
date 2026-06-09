@@ -30,7 +30,8 @@ from . import signals as S
 def _empty_state():
     return {"last_tick": None,
             "books": {"A": {"longs": [], "shorts": [], "anchor": None},
-                      "B": [], "C": [], "D": []}}
+                      "B": [], "C": [], "D": [],
+                      "E": {"longs": [], "anchor": None}}}
 
 
 class LiveBook:
@@ -58,6 +59,7 @@ class LiveBook:
         self._tick_B(panels, pos, now)
         self._tick_C(panels, pos, now)
         self._tick_A(panels, now)
+        self._tick_E(panels, now)
 
         # ── per-book signed weights ──────────────────────────────────
         book_sym_w = {
@@ -65,6 +67,7 @@ class LiveBook:
             "B": self._weights_list("B"),
             "C": self._weights_list("C"),
             "D": self._weights_list("D"),
+            "E": self._weights_E(),
         }
 
         # ── blend by MomAlloc book weights ───────────────────────────
@@ -99,7 +102,8 @@ class LiveBook:
                                   len(self.state["books"]["A"]["shorts"]),
                                 B=len(self.state["books"]["B"]),
                                 C=len(self.state["books"]["C"]),
-                                D=len(self.state["books"]["D"])))
+                                D=len(self.state["books"]["D"]),
+                                E=len(self.state["books"]["E"]["longs"])))
         return target_w, shares, prices, diag, attribution
 
     # ─────────────────────────────────────────────────────────────────
@@ -138,6 +142,11 @@ class LiveBook:
         for x in self.state["books"]["C"]:
             attr.setdefault(x["symbol"], dict(book="C", signal=x.get("side"),
                                               desc=f"Z-flip side={x.get('side')}"))
+
+        # Book E — Reddit sentiment long
+        for s in self.state["books"].get("E", {}).get("longs", []):
+            attr.setdefault(s, dict(book="E", signal=None,
+                                    desc="reddit sentiment long (capitulation/hype)"))
         return attr
 
     # ─────────────────────────────────────────────────────────────────
@@ -251,3 +260,27 @@ class LiveBook:
         for s in shorts:
             out[s] = out.get(s, 0.0) - w
         return out
+
+    # ─────────────────────────────────────────────────────────────────
+    # BOOK E — Reddit sentiment long-only basket (8-day hold)
+    # ─────────────────────────────────────────────────────────────────
+    def _tick_E(self, panels, now):
+        p = C.PARAMS["E"]
+        e = self.state["books"].get("E", {"longs": [], "anchor": None})
+        anchor = e.get("anchor")
+        need = anchor is None
+        if anchor is not None:
+            held = np.busday_count(pd.Timestamp(anchor).date(), now.date())
+            need = held >= p["hold_days"]
+        if need:
+            longs, _info = S.sentiment_longs(set(panels["tickers"]))
+            e["longs"] = longs
+            e["anchor"] = str(now.date())
+        self.state["books"]["E"] = e
+
+    def _weights_E(self):
+        longs = self.state["books"].get("E", {}).get("longs", [])
+        if not longs:
+            return {}
+        w = 1.0 / len(longs)
+        return {s: w for s in longs}   # long-only

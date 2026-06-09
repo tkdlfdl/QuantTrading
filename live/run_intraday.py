@@ -51,17 +51,17 @@ def market_open_now() -> bool:
 def book_weights_from_equity() -> dict:
     """Latest 60d-Sharpe weights per book (clip>=0, normalise); equal-weight fallback."""
     if not C.EQUITY_FILE.exists():
-        return {b: 0.25 for b in C.BOOKS}
+        return {b: 1.0/len(C.BOOKS) for b in C.BOOKS}
     eq = pd.read_csv(C.EQUITY_FILE, parse_dates=["date"])
     piv = eq.pivot_table(index="date", columns="book", values="daily_ret")
     piv = piv.reindex(columns=C.BOOKS)
     if len(piv) < C.MOM_ALLOC_MIN_DAYS:
-        return {b: 0.25 for b in C.BOOKS}
+        return {b: 1.0/len(C.BOOKS) for b in C.BOOKS}
     win = piv.tail(C.MOM_ALLOC_WINDOW)
     sh = (win.mean() / win.std() * np.sqrt(C.TRADING_DAYS)).clip(lower=0).fillna(0)
     tot = sh.sum()
     if tot <= 0:
-        return {b: 0.25 for b in C.BOOKS}
+        return {b: 1.0/len(C.BOOKS) for b in C.BOOKS}
     return {b: float(sh.get(b, 0) / tot) for b in C.BOOKS}
 
 

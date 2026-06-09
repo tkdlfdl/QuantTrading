@@ -109,8 +109,8 @@ def main(argv=None):
         store.meta["last_settled_date"] = str(inception.date())
         store.save()
     else:
-        # portfolio combiners on the live window
-        abcd = live[["A", "B", "C", "D"]]
+        # portfolio combiners on the live window (all individual books incl. E)
+        abcd = live[C.BOOKS]
         fixedew = E.fixed_ew(abcd)
         momalloc = E.mom_alloc(abcd)
         allr = abcd.copy()

@@ -35,7 +35,8 @@ EOD_SUMMARY   = C.STATE_DIR / "eod_summary.csv"
 EOD_POSITIONS = C.STATE_DIR / "eod_positions.csv"
 XLSX          = C.REPORTS_DIR / "track_record.xlsx"
 
-BOOK_LABEL = {"A": "Momentum", "B": "QQQ Bubble", "C": "Intraday MR", "D": "Contrarian"}
+BOOK_LABEL = {"A": "Momentum", "B": "QQQ Bubble", "C": "Intraday MR",
+              "D": "Contrarian", "E": "Reddit Sentiment"}
 
 
 # ─────────────────────────────────────────────────────────────────────
@@ -57,6 +58,7 @@ def _book_map():
         for x in b.get("B", []): m[x["symbol"]] = "B"
         for x in b.get("C", []): m[x["symbol"]] = "C"
         for x in b.get("D", []): m[x["symbol"]] = "D"
+        for s in b.get("E", {}).get("longs", []): m[s] = "E"
     return m
 
 

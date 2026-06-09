@@ -226,6 +226,66 @@ def replay_A(panels):
 
 
 # ─────────────────────────────────────────────────────────────────────
+# BOOK E — Reddit sentiment long-only (daily return series)
+# ─────────────────────────────────────────────────────────────────────
+def replay_E(panels):
+    """Daily return series for Book E over the sentiment window (NaN elsewhere)."""
+    p = C.PARAMS["E"]
+    try:
+        import duckdb
+    except Exception:
+        return pd.Series(dtype=float), [], []
+    if not C.SENTIMENT_DB.exists():
+        return pd.Series(dtype=float), [], []
+
+    con = duckdb.connect(str(C.SENTIMENT_DB), read_only=True)
+    sd = con.execute("select date,symbol,weighted_compound,mention_count from sentiment_daily").df()
+    con.close()
+    if sd.empty:
+        return pd.Series(dtype=float), [], []
+    sd["date"] = pd.to_datetime(sd["date"])
+    sent = sd.pivot_table(index="date", columns="symbol", values="weighted_compound", aggfunc="mean")
+    ment = sd.pivot_table(index="date", columns="symbol", values="mention_count", aggfunc="sum").fillna(0)
+
+    prices = panels["daily_close"]
+    cal = pd.bdate_range(sent.index.min(), sent.index.max())
+    syms = [s for s in sent.columns if s in prices.columns]
+    sent = sent.reindex(cal)[syms]
+    cum = (ment.reindex(cal)[syms].fillna(0) > 0).cumsum()
+    px = prices.reindex(cal)[syms].ffill(); ret = px.pct_change().fillna(0)
+    n = len(cal)
+
+    idx = pd.DataFrame(index=cal, columns=syms, dtype=float)
+    for s in syms:
+        si = 100.0 * (1 + sent[s].fillna(0).clip(-1, 1) * p["sentiment_scale"]).cumprod()
+        lp = np.log(si.replace(0, np.nan).ffill()); fair = si.rolling(p["ma_window"]).mean()
+        res = lp - np.log(fair)
+        z = (res - res.rolling(p["z_window"]).mean()) / res.rolling(p["z_window"]).std()
+        idx[s] = np.tanh(z / 2)
+    sig = idx.shift(1); warm = p["ma_window"] + p["z_window"] + 1; tc = p["tc_one_way"]
+
+    daily = pd.Series(np.nan, index=cal)
+    i = warm
+    while i < n - 1:
+        elig = cum.iloc[i-1]; elig = elig[elig >= p["min_mentions"]].index
+        sc = sig.iloc[i][elig].dropna()
+        cap = sc[sc < -p["extreme"]].nsmallest(p["top_n"])
+        momo = sc[(sc > p["mild"]) & (sc <= p["extreme"])].nlargest(p["top_n"])
+        longs = pd.concat([cap, momo]).drop_duplicates()
+        end = min(i + p["hold_days"], n)
+        if len(longs) == 0:
+            for j in range(i, end): daily.iloc[j] = 0.0
+            i = end; continue
+        for j in range(i, end):
+            r = ret.iloc[j][longs.index].mean()
+            if j == i: r -= tc
+            daily.iloc[j] = r
+        i = end
+    daily.index = pd.to_datetime(daily.index)
+    return daily, [], []
+
+
+# ─────────────────────────────────────────────────────────────────────
 # REPLAY ALL BOOKS
 # ─────────────────────────────────────────────────────────────────────
 def replay_all(panels):
@@ -233,9 +293,10 @@ def replay_all(panels):
     rB, posB, clB = replay_B(panels)
     rC, _, _   = replay_C(panels)
     rD, posD, clD = replay_D(panels)
+    rE, _, _   = replay_E(panels)
 
-    book_rets = pd.DataFrame({"A": rA, "B": rB, "C": rC, "D": rD}).sort_index()
-    positions = {"A": [], "B": posB, "C": [], "D": posD}
+    book_rets = pd.DataFrame({"A": rA, "B": rB, "C": rC, "D": rD, "E": rE}).sort_index()
+    positions = {"A": [], "B": posB, "C": [], "D": posD, "E": []}
     closed = clB + clD
     trades_df = pd.DataFrame(closed) if closed else pd.DataFrame(
         columns=["book", "ticker", "side", "entry_ts", "exit_ts", "entry_px", "exit_px", "ret"])

@@ -48,7 +48,7 @@ NAN_MAX          = 0.30          # drop tickers with >30% NaN (per-book where re
 
 # ── Books ───────────────────────────────────────────────────────────
 # Individual strategy books + two derived portfolios.
-BOOKS = ["A", "B", "C", "D"]
+BOOKS = ["A", "B", "C", "D", "E"]
 PORTFOLIOS = ["FixedEW", "MomAlloc"]
 ALL_BOOKS = BOOKS + PORTFOLIOS
 
@@ -57,6 +57,7 @@ BOOK_LABELS = {
     "B": "QQQ Bubble Hourly Momentum",
     "C": "Intraday MR + Momentum Flip",
     "D": "Contrarian Bubble Score",
+    "E": "Reddit Sentiment Long-Only",
     "FixedEW": "Fixed Equal-Weight Portfolio",
     "MomAlloc": "Momentum-Allocation Portfolio",
 }
@@ -90,7 +91,16 @@ PARAMS = {
         hold_hours=13, top_n=20,
         tc_one_way=TC_ONE_WAY,
     ),
+    # E: Reddit sentiment long-only — buy capitulation + moderate hype (no shorts)
+    "E": dict(
+        ma_window=15, z_window=40, mild=0.5, extreme=0.6,
+        hold_days=8, top_n=5, min_mentions=5,
+        sentiment_scale=0.05, tc_one_way=TC_ONE_WAY,
+    ),
 }
+
+# Sentiment data source (DuckDB) for Book E
+SENTIMENT_DB = ROOT / "data" / "market_data.duckdb"
 
 # Momentum-allocation portfolio settings
 MOM_ALLOC_WINDOW   = 60     # trailing days for rolling Sharpe weighting
