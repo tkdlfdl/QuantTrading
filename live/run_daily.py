@@ -84,6 +84,15 @@ def main(argv=None):
     print("Phase 0 — prepare data")
     last_complete = PREP.prepare(refresh=not no_refresh)
 
+    # ── Phase 0b: refresh Reddit sentiment for Book E (non-fatal) ────
+    if "--no-sentiment" not in argv:
+        print("Phase 0b — refresh sentiment (Book E)")
+        try:
+            from . import refresh_sentiment
+            refresh_sentiment.main([])
+        except Exception as e:
+            print(f"  [sentiment] refresh skipped ({e}).")
+
     # ── Determine inception (forward-only) ──────────────────────────
     if store.meta is None:
         if replay_last:

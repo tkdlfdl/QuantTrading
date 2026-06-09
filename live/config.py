@@ -101,6 +101,23 @@ PARAMS = {
 
 # Sentiment data source (DuckDB) for Book E
 SENTIMENT_DB = ROOT / "data" / "market_data.duckdb"
+REDDIT_CREDS_FILE = STATE_DIR / "reddit_creds.json"
+
+
+def load_reddit_creds():
+    """Reddit API creds for PRAW. env REDDIT_CLIENT_ID/SECRET -> reddit_creds.json -> (None,None)."""
+    import os, json
+    cid = os.environ.get("REDDIT_CLIENT_ID")
+    csec = os.environ.get("REDDIT_CLIENT_SECRET")
+    if cid and csec:
+        return cid, csec
+    if REDDIT_CREDS_FILE.exists():
+        try:
+            d = json.loads(REDDIT_CREDS_FILE.read_text(encoding="utf-8"))
+            return d.get("client_id"), d.get("client_secret")
+        except Exception:
+            pass
+    return None, None
 
 # Momentum-allocation portfolio settings
 MOM_ALLOC_WINDOW   = 60     # trailing days for rolling Sharpe weighting
