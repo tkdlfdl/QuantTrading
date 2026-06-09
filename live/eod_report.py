@@ -76,16 +76,34 @@ def _book_weights():
     return {b: float(sh.get(b, 0) / tot) for b in C.BOOKS} if tot > 0 else {b: 0.25 for b in C.BOOKS}
 
 
+def _safe_to_csv(df, path, retries=3, wait=2.0):
+    """Write CSV, tolerating transient file locks (e.g. open in Excel)."""
+    import time
+    for a in range(retries):
+        try:
+            df.to_csv(path, index=False)
+            return True
+        except PermissionError:
+            if a < retries - 1:
+                time.sleep(wait)
+    print(f"  [eod] {path.name} locked — skipped this write (data kept for next run).")
+    return False
+
+
 def _upsert(path, df_new, key_cols):
-    """Append df_new to the CSV, replacing any existing rows matching key_cols values."""
+    """Append df_new to the CSV, replacing any existing rows matching key_cols values.
+    Returns the merged frame (in-memory) even if the disk write is skipped due to a lock."""
     if path.exists():
-        old = pd.read_csv(path)
-        keyvals = set(map(tuple, df_new[key_cols].astype(str).values))
-        mask = ~old[key_cols].astype(str).apply(tuple, axis=1).isin(keyvals)
-        out = pd.concat([old[mask], df_new], ignore_index=True)
+        try:
+            old = pd.read_csv(path)
+            keyvals = set(map(tuple, df_new[key_cols].astype(str).values))
+            mask = ~old[key_cols].astype(str).apply(tuple, axis=1).isin(keyvals)
+            out = pd.concat([old[mask], df_new], ignore_index=True)
+        except Exception:
+            out = df_new
     else:
         out = df_new
-    out.to_csv(path, index=False)
+    _safe_to_csv(out, path)
     return out
 
 
@@ -99,10 +117,28 @@ def _metrics(daily_ret: pd.Series):
     return float(sh), float(dd)
 
 
+def _is_trading_day(cli, day: str) -> bool:
+    """Authoritative check via Alpaca's market calendar — was `day` a trading day?"""
+    try:
+        from alpaca.trading.requests import GetCalendarRequest
+        d = dt.date.fromisoformat(day)
+        cal = cli.get_calendar(GetCalendarRequest(start=d, end=d))
+        return len(cal) > 0
+    except Exception:
+        # fallback: weekday check (Mon-Fri)
+        return dt.date.fromisoformat(day).weekday() < 5
+
+
 # ─────────────────────────────────────────────────────────────────────
-def build(today=None):
+def build(today=None, force=False):
     today = today or dt.date.today().isoformat()
     cli = _client()
+
+    # Trading-day gate: only record EOD on actual market-open days
+    if not force and not _is_trading_day(cli, today):
+        print(f"EOD report: {today} is not a trading day (market closed) — skipped.")
+        return
+
     acct = cli.get_account()
     equity = float(acct.equity); last_eq = float(acct.last_equity)
     positions = cli.get_all_positions()
@@ -164,7 +200,7 @@ def build(today=None):
     bd["sharpe_itd"] = bd["book"].map(sh_map)
     bd["maxdd_itd"]  = bd["book"].map(dd_map)
     bd["date"] = bd["date"].dt.date.astype(str)
-    bd.to_csv(EOD_BOOKDAILY, index=False)
+    _safe_to_csv(bd, EOD_BOOKDAILY)
 
     # ── 4. SUMMARY (account level) ───────────────────────────────────
     attributed = sum(book_pnl.values())
@@ -188,10 +224,13 @@ def build(today=None):
     sm["sharpe_itd"] = round(sh, 4)
     sm["maxdd_itd_pct"] = round(dd * 100, 2)
     sm["date"] = sm["date"].dt.date.astype(str)
-    sm.to_csv(EOD_SUMMARY, index=False)
+    _safe_to_csv(sm, EOD_SUMMARY)
 
     # ── 5. WRITE EXCEL ───────────────────────────────────────────────
-    _write_excel()
+    try:
+        _write_excel()
+    except PermissionError:
+        print("  [eod] track_record.xlsx locked (open in Excel?) — skipped workbook write.")
     print(f"EOD report for {today}:")
     print(f"  Equity ${equity:,.2f}  Day P&L ${day_pnl:+,.2f}  Total ${equity-START_EQUITY:+,.2f} "
           f"({(equity/START_EQUITY-1)*100:+.2f}%)")
