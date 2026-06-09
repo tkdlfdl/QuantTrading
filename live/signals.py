@@ -133,6 +133,24 @@ def daily_bubble_on_curve(equity: pd.Series, ma_days: int, z_days: int) -> pd.Se
 # ─────────────────────────────────────────────────────────────────────
 # BOOK E — Reddit sentiment long-only signal (capitulation + moderate hype)
 # ─────────────────────────────────────────────────────────────────────
+def sentiment_is_fresh() -> bool:
+    """Cheap check: is sentiment_daily current enough for Book E to trade?"""
+    try:
+        import duckdb
+        if not C.SENTIMENT_DB.exists():
+            return False
+        con = duckdb.connect(str(C.SENTIMENT_DB), read_only=True)
+        mx = con.execute("select max(date) from sentiment_daily").fetchone()[0]
+        con.close()
+        if mx is None:
+            return False
+        stale = int(np.busday_count(pd.Timestamp(mx).date(),
+                                    pd.Timestamp.now().normalize().date()))
+        return stale <= C.SENTIMENT_MAX_STALE_DAYS
+    except Exception:
+        return False
+
+
 def sentiment_longs(price_universe):
     """
     Returns (longs, info) for Book E using the latest available Reddit sentiment.
@@ -160,6 +178,16 @@ def sentiment_longs(price_universe):
                           values="mention_count", aggfunc="sum").fillna(0)
 
     cal = pd.bdate_range(sent.index.min(), sent.index.max())
+
+    # ── staleness gate: drop Book E if sentiment data is too old ──
+    latest = sent.index.max()
+    stale_days = int(np.busday_count(pd.Timestamp(latest).date(),
+                                     pd.Timestamp.now().normalize().date()))
+    if stale_days > C.SENTIMENT_MAX_STALE_DAYS:
+        return [], {"stale": True, "latest_sentiment": str(pd.Timestamp(latest).date()),
+                    "stale_days": stale_days,
+                    "note": f"dropped — sentiment {stale_days}d old (> {C.SENTIMENT_MAX_STALE_DAYS})"}
+
     syms = [s for s in sent.columns if s in price_universe]
     if not syms:
         return [], {"error": "no overlap with price universe"}

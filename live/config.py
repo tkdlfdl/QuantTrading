@@ -102,6 +102,9 @@ PARAMS = {
 # Sentiment data source (DuckDB) for Book E
 SENTIMENT_DB = ROOT / "data" / "market_data.duckdb"
 REDDIT_CREDS_FILE = STATE_DIR / "reddit_creds.json"
+# Book E is DROPPED (no positions) when the latest sentiment data is older than this
+# many business days — so a stale signal never trades.
+SENTIMENT_MAX_STALE_DAYS = 5
 
 
 def load_reddit_creds():

@@ -71,9 +71,18 @@ class LiveBook:
         }
 
         # ── blend by MomAlloc book weights ───────────────────────────
+        # Renormalise weights over books that actually have positions this tick,
+        # so a dropped/empty book (e.g. stale Book E) redistributes to the rest.
+        active = [b for b in C.BOOKS if book_sym_w.get(b)]
+        wsum = sum(float(book_weights.get(b, 0.0)) for b in active)
+        if wsum > 0:
+            eff_w = {b: float(book_weights.get(b, 0.0)) / wsum for b in active}
+        else:
+            eff_w = {b: 1.0 / len(active) for b in active} if active else {}
+
         target_w = {}
-        for b in C.BOOKS:
-            bw = float(book_weights.get(b, 0.0))
+        for b in active:
+            bw = eff_w.get(b, 0.0)
             for sym, w in book_sym_w[b].items():
                 target_w[sym] = target_w.get(sym, 0.0) + bw * w
 
@@ -267,6 +276,10 @@ class LiveBook:
     def _tick_E(self, panels, now):
         p = C.PARAMS["E"]
         e = self.state["books"].get("E", {"longs": [], "anchor": None})
+        # Freshness gate: drop the book entirely when sentiment data is stale
+        if not S.sentiment_is_fresh():
+            self.state["books"]["E"] = {"longs": [], "anchor": None}
+            return
         anchor = e.get("anchor")
         need = anchor is None
         if anchor is not None:
