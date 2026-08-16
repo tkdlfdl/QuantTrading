@@ -65,15 +65,15 @@ def _book_map():
 def _book_weights():
     """Current MomAlloc allocation per book (from the simulated track record)."""
     if not C.EQUITY_FILE.exists():
-        return {b: 0.25 for b in C.BOOKS}
+        return {b: 1.0/len(C.BOOKS) for b in C.BOOKS}
     eq = pd.read_csv(C.EQUITY_FILE, parse_dates=["date"])
     piv = eq.pivot_table(index="date", columns="book", values="daily_ret").reindex(columns=C.BOOKS)
     if len(piv) < C.MOM_ALLOC_MIN_DAYS:
-        return {b: 0.25 for b in C.BOOKS}
+        return {b: 1.0/len(C.BOOKS) for b in C.BOOKS}
     win = piv.tail(C.MOM_ALLOC_WINDOW)
     sh = (win.mean() / win.std() * np.sqrt(TD)).clip(lower=0).fillna(0)
     tot = sh.sum()
-    return {b: float(sh.get(b, 0) / tot) for b in C.BOOKS} if tot > 0 else {b: 0.25 for b in C.BOOKS}
+    return {b: float(sh.get(b, 0) / tot) for b in C.BOOKS} if tot > 0 else {b: 1.0/len(C.BOOKS) for b in C.BOOKS}
 
 
 def _safe_to_csv(df, path, retries=10, wait=1.0):

@@ -48,12 +48,15 @@ NAN_MAX          = 0.30          # drop tickers with >30% NaN (per-book where re
 
 # ── Books ───────────────────────────────────────────────────────────
 # Individual strategy books + derived portfolios.
-BOOKS = ["A", "B", "C", "D", "E", "F"]
-# Books eligible for CHAMPION (IvolVT) capital — 2026-08-15 audit decisions:
-#   B dropped  : honest Sharpe 0.775, ~zero marginal portfolio contribution
+BOOKS = ["A", "B", "C", "D", "D14", "E", "F"]
+# Books eligible for CHAMPION (IvolVT) capital — audit + promotion decisions:
+#   B dropped  : honest Sharpe 0.775, ~zero marginal portfolio contribution (2026-08-15)
 #   E excluded : audit Sharpe 0.63 full-history; sentiment feed stale since 2026-06
+#   D14 added  : second contrarian sleeve (hold=14h) promoted 2026-08-16 —
+#                champion 2.580 -> 2.781 / CAGR 43.9% / MaxDD -8.2%,
+#                robustness 11/11, verifier PASS (portfolio_champ_d14)
 # B and E keep running as paper track records; they receive no champion capital.
-ALLOC_BOOKS = ["A", "C", "D", "F"]
+ALLOC_BOOKS = ["A", "C", "D", "D14", "F"]
 PORTFOLIOS = ["FixedEW", "MomAlloc", "IvolVT"]
 ALL_BOOKS = BOOKS + PORTFOLIOS
 
@@ -63,10 +66,11 @@ BOOK_LABELS = {
     "C": "Intraday MR + Momentum Flip",
     "D": "Contrarian Bubble Score",
     "E": "Reddit Sentiment Long-Only",
+    "D14": "Contrarian Bubble Score (14h sleeve)",
     "F": "Universe Hourly Momentum Long",
     "FixedEW": "Fixed Equal-Weight Portfolio",
     "MomAlloc": "Momentum-Allocation Portfolio",
-    "IvolVT": "Champion: Inverse-Vol + 15% Vol-Target (A/C/D/F)",
+    "IvolVT": "Champion: Inverse-Vol + 15% Vol-Target (A/C/D/D14/F)",
 }
 
 # ── Champion (IvolVT) allocator settings ────────────────────────────
@@ -118,6 +122,14 @@ PARAMS = {
     "D": dict(
         bubble_ma_hours=104, threshold=-0.8,
         hold_hours=8, top_n=20,
+        tc_one_way=TC_ONE_WAY,
+    ),
+    # D14: second contrarian sleeve — same signal, 14h harvest horizon.
+    # Promoted 2026-08-16 (Cycle 12): standalone Sharpe 2.665/-12.1%;
+    # champion with both sleeves 2.781/-8.2% (robustness 11/11).
+    "D14": dict(
+        bubble_ma_hours=104, threshold=-0.8,
+        hold_hours=14, top_n=20,
         tc_one_way=TC_ONE_WAY,
     ),
     # F: Universe Hourly Momentum Long — top-5 by 750h (~107d) return, hold 200h (~29d)

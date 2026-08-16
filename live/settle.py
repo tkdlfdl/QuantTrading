@@ -44,8 +44,10 @@ def _daily_infra(idx, prices):
 # ─────────────────────────────────────────────────────────────────────
 # BOOK D — Contrarian Bubble (MA=104h, thr=-0.8, hold=13h, top=20)
 # ─────────────────────────────────────────────────────────────────────
-def replay_D(panels):
-    p = C.PARAMS["D"]
+def replay_D(panels, book="D"):
+    """Contrarian bubble replay. book="D" (hold 8h) or "D14" (hold 14h sleeve,
+    promoted 2026-08-16: champion 2.580 -> 2.781 with both sleeves)."""
+    p = C.PARAMS[book]
     hc, ho, idx = panels["hourly_close"], panels["hourly_open"], panels["idx_h"]
     tickers = panels["tickers"]
     prices = hc.values.astype(np.float64)
@@ -74,7 +76,7 @@ def replay_D(panels):
         xb = min(t + hold_h, last_bar)
         trades.append((eb, xb, list(chosen), +1))
         for s in chosen:
-            rec = dict(book="D", ticker=tickers[s], side=1,
+            rec = dict(book=book, ticker=tickers[s], side=1,
                        entry_ts=str(idx[eb]), exit_ts=str(idx[xb]),
                        entry_px=float(opens[eb, s]), exit_px=float(prices[xb, s]))
             if xb >= last_bar:
@@ -354,14 +356,16 @@ def replay_all(panels):
     rB, posB, clB = replay_B(panels)
     rC, _, _      = replay_C(panels)
     rD, posD, clD = replay_D(panels)
+    rD14, posD14, clD14 = replay_D(panels, book="D14")
     rE, _, _      = replay_E(panels)
     rF, posF, clF = replay_F(panels)
 
     book_rets = pd.DataFrame(
-        {"A": rA, "B": rB, "C": rC, "D": rD, "E": rE, "F": rF}
+        {"A": rA, "B": rB, "C": rC, "D": rD, "D14": rD14, "E": rE, "F": rF}
     ).sort_index()
-    positions = {"A": [], "B": posB, "C": [], "D": posD, "E": [], "F": posF}
-    closed = clB + clD + clF
+    positions = {"A": [], "B": posB, "C": [], "D": posD, "D14": posD14,
+                 "E": [], "F": posF}
+    closed = clB + clD + clD14 + clF
     trades_df = pd.DataFrame(closed) if closed else pd.DataFrame(
         columns=["book", "ticker", "side", "entry_ts", "exit_ts", "entry_px", "exit_px", "ret"])
     return book_rets, positions, trades_df

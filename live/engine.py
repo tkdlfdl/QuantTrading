@@ -185,8 +185,9 @@ def ivol_vt_weights(book_rets: pd.DataFrame, panic_today: bool = False) -> dict:
             if b in w:
                 freed += 0.5 * w[b]
                 w[b] *= 0.5
-        if "D" in w:
-            w["D"] += freed
+        d_books = [b for b in w if b.startswith("D")]
+        for b in d_books:
+            w[b] += freed / len(d_books)
     return w
 
 
@@ -211,8 +212,9 @@ def ivol_voltgt(book_rets: pd.DataFrame) -> pd.Series:
                 if b in wt:
                     freed += 0.5 * wt[b]
                     wt[b] *= 0.5
-            if "D" in wt:
-                wt["D"] += freed
+            d_books = [b for b in wt if b.startswith("D")]
+            for b in d_books:
+                wt[b] += freed / len(d_books)
         port[t] = float(sum(wt[b] * R.iloc[t][b] for b in keys))
     ser = pd.Series(port, index=R.index)
     rv = ser.rolling(C.VT_VOL_WINDOW).std().shift(1) * np.sqrt(C.TRADING_DAYS)
