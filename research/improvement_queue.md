@@ -38,6 +38,35 @@ angle; unread papers and untested ideas come first).
 - **Spec:** PRE-REGISTERED single ridge-logistic on (sigma-day features) sizing
   C's trades 0/0.5/1 — the only sanctioned adaptivity; chronological CV.
 
+### 28. UVXY carry-regime study  [V3 — half-day analysis, feeds #29]
+- **Spec:** characterize UVXY daily drift by VIX-level/realized-vol regime
+  (1997+ VIX, 2011+ UVXY): when is the carry bleed weakest? Pure diagnostic.
+- **Source:** Dew-Becker et al.; Cheng 2019 (registry #104).
+
+### 29. NEW BOOK: complacency-timed UVXY convexity  [V2 — TOP orthogonal candidate]
+- **Spec (original synthesis):** long UVXY only when (i) D-breadth INVERTED
+  (near-zero oversold names = complacency), (ii) VRP-proxy low/falling, and
+  (iii) realized-vol ignition rising — budget-capped ~30 in-market days/yr
+  (worst-case carry ~5bp/yr at portfolio level). All signals lagged 1 day.
+- **Judge:** worst-5%-day P&L table + champion delta with LW p<0.10 — NOT
+  standalone Sharpe. Distinct from dead #80 (that timed SPY beta).
+- **Source:** ORIGINAL synthesis + Israelov-Nielsen #103, Cheng #104.
+
+### 30. Book F residual-momentum re-rank  [V4 — stress-beta cut at source]
+- **Spec:** rank F by 750h residual return (vs rolling market beta) instead of
+  raw return; anchor must reproduce 1.548 with raw ranking. Base rate: #31
+  ranking swap failed badly — modest prior.
+- **Source:** Hanauer-Windmüller 2023 (#105); Blitz-Huij-Martens 2011.
+
+### 31. Crisis-only short/flat SPY sleeve  [V1 remnant after probe #102]
+- **Spec:** flat by default; SHORT SPY only when monthly TSMOM negative AND
+  fast confirmation (21d return < 0) — the only trend variant not killed by
+  #102. NOTE: shorts need human sign-off per house rules.
+
+### 32. Utilities/SPY defensive rotation  [V5 — practitioner tier]
+- **Spec:** Gayed-Bilello utilities-vs-SPY relative strength rotation weekly;
+  hard gates: corr to champ < 0.3, stress-day P&L >= 0.
+
 ## Done
 
 - **2026-08-16 | Cycle 13 | D21 third sleeve — tested-no-gain (theory-confirming)**
