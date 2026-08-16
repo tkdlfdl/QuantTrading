@@ -88,3 +88,25 @@ without saying so.
 
 Once data is stored and validated → **`quant-developer`** (to implement the
 signal) → **`backtest`** (to evaluate). Never estimate metrics yourself.
+
+
+## Learned lessons (append-only)
+
+- **2026-08-16 (data-starvation incident):** the NASDAQ-100 Wikipedia page
+  dropped its constituents table (~2026-07-08); `get_nasdaq100()` raised, and
+  because `prepare_data.refresh_hourly` treats errors as NON-FATAL, the entire
+  data layer silently froze for 5+ weeks (hourly cache, daily panel extension,
+  sentiment refresh) while the live engine kept trading on stale history.
+  Fixes applied: (1) scraper now tries multiple column names + a ticker-table
+  plausibility heuristic and FAILS SOFT to `get_cached_universe()` (merged-cache
+  columns) with a loud warning; (2) rule: any silently-caught refresh failure
+  must surface in monitoring — check `[prepare]`/`[universe]` warnings in
+  cron.log and ALERT when the merged cache's last bar is > 3 trading days old.
+
+- **2026-08-16 (ticker-splice artifact):** the "BNY" column spliced a ~$10
+  instrument onto BNY Mellon (ticker change) -> phantom +1265%/day return that
+  would have topped Book F's momentum ranking. Rule: after any universe change
+  or cache rebuild, scan for single-bar |returns| > 100% (splice/reuse
+  signature) before the data is used; live F ranking now carries a splice
+  guard (settle.py) as defense-in-depth. Ticker changes and reuses are a
+  recurring hazard — never assume a column name is one instrument forever.

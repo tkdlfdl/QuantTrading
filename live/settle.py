@@ -304,6 +304,13 @@ def replay_F(panels):
     mom = S.momentum_hours(hc, p["lookback_hours"]).values   # [T x U]
     tdays, bdi, day_last, day_first, dret = _daily_infra(idx, prices)
 
+    # SPLICE GUARD (2026-08-16): exclude tickers with any single-bar move
+    # > 100% inside the lookback — ticker-reuse/splice artifacts (e.g. the
+    # "BNY" column spliced a ~$10 instrument onto BNY Mellon at +1265%/day,
+    # which would have topped the ranking on a phantom return).
+    jump = hc.pct_change().abs().rolling(
+        p["lookback_hours"], min_periods=1).max().values      # [T x U]
+
     warmup = p["lookback_hours"] + 1
     hold_h = p["hold_hours"]
     top_n  = p["top_n"]
@@ -313,7 +320,8 @@ def replay_F(panels):
     i = warmup
     while i + hold_h < T:
         row   = mom[i]
-        valid = np.where(np.isfinite(row) & (row != 0))[0]
+        valid = np.where(np.isfinite(row) & (row != 0)
+                         & ~(jump[i] > 1.0))[0]
         if len(valid) >= top_n:
             chosen = valid[np.argpartition(row[valid], -top_n)[-top_n:]]
             eb = i + 1

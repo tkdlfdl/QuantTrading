@@ -29,12 +29,44 @@ def _clean(ticker: str) -> str:
     return ticker.strip().replace(".", "-")
 
 
+def get_cached_universe() -> list[str]:
+    """Last-known universe = columns of the merged hourly cache. Fallback when
+    scraping fails — keeps the data pipeline alive on a stale-but-valid list."""
+    from pathlib import Path
+    cache = Path(__file__).parent / "cache" / "merged_hourly_close.parquet"
+    if cache.exists():
+        cols = [c for c in pd.read_parquet(cache).columns if c != "SPY"]
+        return sorted(cols)
+    return []
+
+
 def get_nasdaq100() -> list[str]:
-    tables = _fetch_tables(_NDX_URL)
-    for t in tables:
-        if "Ticker" in t.columns:
-            return sorted(_clean(s) for s in t["Ticker"].dropna().tolist())
-    raise RuntimeError("NASDAQ-100 ticker column not found on Wikipedia page.")
+    """NDX constituents from Wikipedia. 2026-08-16 fix: the page dropped its
+    'Ticker' table around 2026-07-08, which silently starved the whole data
+    layer for 5+ weeks (prepare_data treats refresh errors as non-fatal).
+    Now: multiple column names + plausibility heuristic, and FAIL SOFT to the
+    cached universe instead of raising."""
+    try:
+        tables = _fetch_tables(_NDX_URL)
+        for col in ("Ticker", "Symbol", "Ticker symbol"):
+            for t in tables:
+                if col in t.columns and 80 <= len(t) <= 130:
+                    return sorted(_clean(s) for s in t[col].dropna().astype(str))
+        # heuristic: any 80-130 row table with a column of ticker-like strings
+        for t in tables:
+            if 80 <= len(t) <= 130:
+                for c in t.columns:
+                    vals = t[c].dropna().astype(str)
+                    if len(vals) >= 80 and vals.str.fullmatch(r"[A-Z.\-]{1,6}").mean() > 0.9:
+                        return sorted(_clean(s) for s in vals)
+        raise RuntimeError("no NDX constituents table found on page")
+    except Exception as e:
+        cached = get_cached_universe()
+        if cached:
+            print(f"  [universe] NDX scrape failed ({e}) -> using cached "
+                  f"universe fallback ({len(cached)} tickers). FIX THE SCRAPER.")
+            return cached
+        raise RuntimeError(f"NASDAQ-100 scrape failed and no cache fallback: {e}")
 
 
 def get_sp500() -> list[str]:
