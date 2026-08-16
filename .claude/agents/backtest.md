@@ -225,6 +225,15 @@ records, notes)` — appends to `research/improvements_log.md`: WHICH idea/paper
 produced the improvement and the exact Sharpe/CAGR/MaxDD deltas. No anonymous
 improvements.
 
+### Significance gate (REQUIRED for promotions and small deltas)
+
+Any claimed improvement with Sharpe delta < 0.15, and every overlay-class
+change, must pass `python -m tools.significance <candidate> <baseline>`
+(Ledoit-Wolf 2008 studentized bootstrap on the Sharpe difference) at one-sided
+p < 0.10 before being recorded as IMPROVED or recommended for promotion.
+Report the delta, SE, CI and p alongside the metrics. Never promote on a
+point estimate alone.
+
 ### Verification (REQUIRED after recording — before reporting)
 
 Every recorded result must pass the **`verifier`** agent (or at minimum

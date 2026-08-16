@@ -9,7 +9,46 @@ angle; unread papers and untested ideas come first).
 
 ## Queue
 
+### 21. D sector-relative ranking tie-break  [Hameed-Mian 2015, #91]
+- **Spec:** keep raw score < -0.8 gate (beta bounce is part of the edge, #47);
+  rank eligible names by WITHIN-SECTOR score z instead of raw score. GICS-lite
+  sectors from static large-cap map.
+### 22. D end-of-day pressure entry tilt  [Baltussen et al. 2024, #92]
+- **Spec:** entries triggered in the final 2 bars deferred to next open vs
+  taken immediately — A/B on D8 sleeve.
+### 23. D path-composition diagnostic  [Barardehi 2026, #93 — analysis only]
+- **Spec:** decompose each D entry's trailing move into overnight/intraday/jump
+  components; measure rebound by cohort. Zero mining risk; informs #24.
+### 24. Sleeve assignment by reversal speed  [Dai et al. 2024 FAJ, #94]
+- **Spec:** route fast/rich oversold names to D8, slow/strong to D14 (replaces
+  identical selection in both sleeves). Test only if #23 shows cohort spread.
+
+### 25. D phase-tranche + threshold barbell  [TOP — extends the proven ensemble win]
+- **Spec:** (i) tranche each D sleeve across entry phases (start offsets 0..hold-1,
+  1/hold weight each — the JT construction); (ii) equal-weight a threshold
+  barbell (0.7/0.9) beside 0.8. Turnover nets across variants.
+- **Source:** Hoffstein 2019; JT 1993; DeMiguel; cs_hardsci_sweep2 idea 1.
+- **Gate:** significance p<0.10 vs 2.781 champion.
+
+### 26. D asymmetric entry/exit bands  [Blitz FAJ 2023, #97]
+- **Spec:** enter < -0.8, but exit only when score > -0.4 (lazy exit), DD-capped
+  at 21h max hold. Cuts re-entry churn.
+
+### 27. Book C meta-labeling filter  [Joubert 2022, #98]
+- **Spec:** PRE-REGISTERED single ridge-logistic on (sigma-day features) sizing
+  C's trades 0/0.5/1 — the only sanctioned adaptivity; chronological CV.
+
 ## Done
+
+- **2026-08-16 | Cycle 13 | D21 third sleeve — tested-no-gain (theory-confirming)**
+  3-sleeve champion 2.842 (+0.061) but p=0.113 misses the significance gate.
+  Diminishing cohort returns exactly as Hoffstein RTL predicts; HM half-life
+  says pressure mostly harvested by 21h. Two sleeves stand. (v1 run VOIDED —
+  ALLOC_BOOKS filter silently dropped the candidate; harness lesson logged.)
+- **2026-08-16 | Semivariance targeting (Wang-Yan) — tested-no-gain**
+  CAGR 52.5% but Sharpe -0.14, DD breach. Aggressive-profile variant documented.
+- **2026-08-16 | Significance gate ADOPTED (Ledoit-Wolf 2008) — process ⭐**
+  D14 vindicated p=0.005; HAR-X retracted p=0.258. Rule 4b added to plan.
 
 - **2026-08-16 | Cycle 12 | Introspection battery — TWO IMPROVEMENTS, ONE PROMOTION-GRADE**
   (a) HAR-X w/ SPY intraday RV: 2.632 (+0.05, marginal ⭐ — fixed Cycle 7's proxy

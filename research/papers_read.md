@@ -80,7 +80,7 @@
 | 57 | Guttal et al. (2016), PLOS ONE | Econophysics/EWS | 2026-08-15 | rejected | Valuable negative: no critical-slowing-down before financial crashes — kills CSD drawdown pre-alarm idea |
 | 58 | Sornette LPPLS corpus (Bree-Joseph 2013; Shu 2024) | Econophysics/bubbles | 2026-08-15 | rejected | Fit fragility, mixed OOS — no LPPLS timing overlay |
 | 59 | HMM regime literature (incl. arXiv:2406.09578) | Regime | 2026-08-15 | rejected | Superseded by jump models (#42) for our use |
-| 60 | Corsi (2009), J. Fin. Econometrics | Vol forecasting/HAR | 2026-08-16 | **IMPROVED** ⭐ (marginal) | Cycle 12 revisit with SPY INTRADAY RV (HAR-X): 2.632 vs 2.580 at same DD — proxy was the problem, as suspected. Superseded by D14 promotion (HAR-X adds nothing on top) |
+| 60 | Corsi (2009), J. Fin. Econometrics | Vol forecasting/HAR | 2026-08-16 | tested-no-gain (revised) | HAR-X +0.052 REFUTED by significance test (p=0.258, LW bootstrap) — was noise, ⭐ retracted. The proxy diagnosis stands but no promotable gain |
 | 61 | Andersen, Bollerslev, Diebold & Labys (2003), Econometrica | Vol forecasting/RV | 2026-08-15 | tested-no-gain | See #60 — daily proxy defeats the RV framework |
 | 62 | Bollerslev, Patton & Quaedvlieg (2016), J. Econometrics | Vol forecasting/HARQ | 2026-08-15 | rejected | Moot given #60 outcome with our proxy |
 | 63 | Patton & Sheppard (2015), REStat | Vol forecasting/semivariance | 2026-08-15 | rejected | Moot given #60 outcome with our proxy |
@@ -105,3 +105,21 @@
 | 82 | Baker-Haugen low-vol corpus (CFA 2024 review) | Low-vol anomaly | 2026-08-16 | rejected | Beta channel + 2015-2024 underperformance; parked as bench idea |
 | 83 | (original — Cycle 9 synthesis) | Original/index timing | 2026-08-16 | tested-no-gain (BENCHED) | Breadth timing: standalone 0.896/corr≤0.38 PASSED, but portfolio-contribution test FAILED: champ+H 2.504 < 2.580 (ivol over-allocates to its 67%-cash profile; 12.5% CAGR dilutes). Bench note: conditional/satellite funding on signal days = possible future variant |
 | 84 | (original — Cycle 12, registry #45 note) | Original/D sleeve | 2026-08-16 | **IMPROVED** ⭐⭐ | D14 sleeve as 5th book: champion 2.580 -> **2.781 / 43.9% / -8.2%**; robustness 11/11; verifier PASS. QUALIFIES FOR FULL PROMOTION (pending human sign-off for live adoption). H cash-sleeve near-miss (2.628, +0.048) also from this cycle |
+| 85 | Ledoit & Wolf (2008), J. Empirical Finance | Methodology/testing | 2026-08-16 | **IMPROVED** ⭐ (process) | Studentized bootstrap Sharpe-delta test ADOPTED AS PROMOTION GATE (tools/significance.py, p<0.10). First use: D14 vindicated (+0.201, p=0.005); HAR-X refuted (+0.052, p=0.258). Giacomini-White 2006, Hansen-Lunde-Nason MCS logged for multi-variant sweeps |
+| 86 | Hoffstein, Sibears & Faber-adjacent RTL (2019), JII | Timing luck/cohorts | 2026-08-16 | tested-no-gain (D21) | Rebalance-timing-luck 1/N math EXPLAINS our D14 win post-hoc. D21 third sleeve: +0.061, p=0.113 — marginal contribution decayed below gate. 2 sleeves suffice |
+| 87 | Hendershott & Menkveld (2014), JFE | Price pressure | 2026-08-16 | rejected (context ⭐) | Transitory pressure 0.49%, half-life 0.92d (~6.5h) — quantitatively rationalizes D's 8h/14h holds and predicts D21 decay (confirmed). Best mechanism paper for D |
+| 88 | So & Wang (2014), JFE | Reversal/earnings | 2026-08-16 | rejected (reassurance) | Reversal ~6x LARGER around announcements — kills the earnings-exclusion worry for D |
+| 89 | Chordia et al. (2014); Jacobs & Müller (2020) | Reversal decay | 2026-08-16 | rejected (context) | Decay applies to daily/weekly reversal, not our hourly horizon |
+| 90 | Kurth, Eisler, Rej & Bouchaud (2026), arXiv/CFM | Short-horizon landscape | 2026-08-16 | rejected (context) | Landscape shifting TOWARD mean reversion — strategic tailwind for D |
+| 91 | Hameed & Mian (2015), JFQA | Sector-relative reversal | 2026-08-16 | pending | Within-industry reversal strongest in large caps — queue: D ranking tie-break (keep raw -0.8 gate per #47 lesson) |
+| 92 | Baltussen, Da & Soebhag (2024) | EOD pressure | 2026-08-16 | pending | End-of-day pressure entry tilt for D — queue |
+| 93 | Barardehi et al. (2026), RFS | Path composition | 2026-08-16 | pending | Overnight/intraday/jump split of oversold moves — DIAGNOSTIC first (sign contested) |
+| 94 | Dai, Medhat, Novy-Marx & Rizova (2024), FAJ | Reversal speed | 2026-08-16 | pending | Vol/turnover-matched sleeve assignment (fast reversals->D8, slow->D14) — queue |
+| 95 | Wang & Yan (2021), JBF | Semivariance targeting | 2026-08-16 | tested-no-gain | Downside targeting: CAGR 52.5% but Sharpe -0.14 and DD -10.2% breaches bar; documented as aggressive-profile variant |
+| — | (finance_sweep2 brief) | — | 2026-08-16 | — | Full ~30-paper table incl. remaining verdicts: research/briefs/finance_sweep2_2026-08.md — merge into registry as items get tested |
+| 96 | Bogousslavsky & Muravyev (2023), J. Fin. Markets | Execution/close auction | 2026-08-16 | pending | Verified 8.1bp close-auction deviation, ~85% overnight reversion — D entry-execution A/B (queue #22, upgraded spec) |
+| 97 | Blitz et al. (2023), FAJ | Reversal bands | 2026-08-16 | pending | Net short-horizon alpha survives ONLY with asymmetric entry/exit bands — queue #25 (aggressive entry, lazy exit) |
+| 98 | Joubert (2022), JFDS | Meta-labeling | 2026-08-16 | pending | Ridge-logistic exposure filter on Book C — pre-registered single spec only (queue #26) |
+| 99 | Toth et al. (2011), PRX; Bucci et al. (2019), PRL | Impact/capacity | 2026-08-16 | rejected (context ⭐) | Square-root impact independently validates D's 8-14h holds and bounds per-trade alpha — capacity audit sidebar |
+| 100 | Zakamulin OOS corpus; PBO literature | Meta/adaptation | 2026-08-16 | rejected (decisive) | AVERAGING BEATS ADAPTATION at our frequency — decades of data needed to distinguish hold=8 vs 14; kills adaptive-parameter threads permanently |
+| — | (cs_hardsci_sweep2 brief) | — | 2026-08-16 | — | Full ~53-paper table: research/briefs/cs_hardsci_sweep2_2026-08.md; merge rows as items get tested |

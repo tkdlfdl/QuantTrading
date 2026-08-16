@@ -94,3 +94,10 @@ data turned out underspecified, route back to `researcher` / `data-engineer`.
   re-implementing selection/P&L. Every candidate test needs a sanity anchor
   (parameter setting that must reproduce the official baseline to ~0.05); if
   the anchor fails, the experiment is VOID — do not debug-until-plausible.
+
+- **2026-08-16 (Cycle 13):** when testing candidate books through live-engine
+  combiners, remember `engine.ivol_voltgt` filters columns by C.ALLOC_BOOKS —
+  a candidate not in that list is SILENTLY dropped (delta exactly 0.000 with
+  SE 0.000 is the tell: identical series). Override the list test-scope or use
+  an inline builder; a zero-delta result on an added book is a harness bug
+  until proven otherwise.

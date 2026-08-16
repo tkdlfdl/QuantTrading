@@ -77,6 +77,12 @@ their lessons back into the agents' own instruction files.
    champion's;
 4. Robustness: improvement survives in ≥ 60% of a ±20% parameter perturbation
    grid (no single-point wins — the Book C lesson);
+4b. **Statistical significance (added 2026-08-16):** the Sharpe delta must pass
+   the Ledoit-Wolf bootstrap test (`python -m tools.significance A B`) at
+   one-sided p < 0.10. Mandatory for overlay-class changes and any delta
+   < 0.15 — at our sample size and typical 0.97+ variant correlation the SE
+   of a Sharpe delta is ~0.07, so small "improvements" are usually noise
+   (first application: D14 vindicated p=0.005; HAR-X refuted p=0.258);
 5. Recorded + registered before adoption; champion history preserved (never
    overwrite the old champion's record).
 
