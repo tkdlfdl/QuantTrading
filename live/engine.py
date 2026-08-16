@@ -173,9 +173,10 @@ def ivol_vt_weights(book_rets: pd.DataFrame, panic_today: bool = False) -> dict:
     hist = book_rets[keys].tail(C.IVOL_WINDOW)
     vol = hist.std() * np.sqrt(C.TRADING_DAYS)
     iv = {}
+    shares = getattr(C, "ALLOC_SHARES", {})
     for b in keys:
         v = float(vol.get(b, np.nan))
-        iv[b] = 1.0 / v if np.isfinite(v) and v > 1e-9 else 0.0
+        iv[b] = shares.get(b, 1.0) / v if np.isfinite(v) and v > 1e-9 else 0.0
     tot = sum(iv.values())
     w = ({b: iv[b] / tot for b in keys} if tot > 0
          else {b: 1.0 / len(keys) for b in keys})

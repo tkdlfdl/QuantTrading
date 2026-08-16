@@ -355,17 +355,23 @@ def replay_all(panels):
     rA, _, _      = replay_A(panels)
     rB, posB, clB = replay_B(panels)
     rC, _, _      = replay_C(panels)
-    rD, posD, clD = replay_D(panels)
+    rD8, posD8, clD8 = replay_D(panels)
     rD14, posD14, clD14 = replay_D(panels, book="D14")
+    # Book D = 50/50 blend of the 8h and 14h sleeves (JT overlapping cohorts;
+    # promoted 2026-08-16). Sleeve positions carry half sizing each.
+    rD = 0.5 * rD8.add(rD14, fill_value=0.0)
+    for rec in posD8:  rec["sleeve"] = "8h";  rec["sleeve_w"] = 0.5
+    for rec in posD14: rec["sleeve"] = "14h"; rec["sleeve_w"] = 0.5
+    posD = posD8 + posD14
+    clD = clD8 + clD14
     rE, _, _      = replay_E(panels)
     rF, posF, clF = replay_F(panels)
 
     book_rets = pd.DataFrame(
-        {"A": rA, "B": rB, "C": rC, "D": rD, "D14": rD14, "E": rE, "F": rF}
+        {"A": rA, "B": rB, "C": rC, "D": rD, "E": rE, "F": rF}
     ).sort_index()
-    positions = {"A": [], "B": posB, "C": [], "D": posD, "D14": posD14,
-                 "E": [], "F": posF}
-    closed = clB + clD + clD14 + clF
+    positions = {"A": [], "B": posB, "C": [], "D": posD, "E": [], "F": posF}
+    closed = clB + clD + clF
     trades_df = pd.DataFrame(closed) if closed else pd.DataFrame(
         columns=["book", "ticker", "side", "entry_ts", "exit_ts", "entry_px", "exit_px", "ret"])
     return book_rets, positions, trades_df

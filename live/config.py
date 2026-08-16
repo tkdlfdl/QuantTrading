@@ -48,15 +48,20 @@ NAN_MAX          = 0.30          # drop tickers with >30% NaN (per-book where re
 
 # ── Books ───────────────────────────────────────────────────────────
 # Individual strategy books + derived portfolios.
-BOOKS = ["A", "B", "C", "D", "D14", "E", "F"]
+BOOKS = ["A", "B", "C", "D", "E", "F"]
 # Books eligible for CHAMPION (IvolVT) capital — audit + promotion decisions:
 #   B dropped  : honest Sharpe 0.775, ~zero marginal portfolio contribution (2026-08-15)
 #   E excluded : audit Sharpe 0.63 full-history; sentiment feed stale since 2026-06
-#   D14 added  : second contrarian sleeve (hold=14h) promoted 2026-08-16 —
-#                champion 2.580 -> 2.781 / CAGR 43.9% / MaxDD -8.2%,
-#                robustness 11/11, verifier PASS (portfolio_champ_d14)
+#   D merged   : Book D is a SINGLE BLENDED book of two internal sleeves
+#                (hold=8h and 14h, 50/50 — JT overlapping cohorts). Promoted
+#                2026-08-16: champion 2.580 -> ~2.78 / MaxDD -8.2%. The blend
+#                carries TWO allocation shares (ALLOC_SHARES) to preserve the
+#                two-cohort risk budget — validated identical to separate books
+#                (corr 0.9996). Do NOT reduce to one share: that reverts the
+#                gain (-0.20 Sharpe, p=0.004 — tested 2026-08-16).
 # B and E keep running as paper track records; they receive no champion capital.
-ALLOC_BOOKS = ["A", "C", "D", "D14", "F"]
+ALLOC_BOOKS = ["A", "C", "D", "F"]
+ALLOC_SHARES = {"D": 2.0}   # blended D = two cohort shares in inverse-vol weighting
 PORTFOLIOS = ["FixedEW", "MomAlloc", "IvolVT"]
 ALL_BOOKS = BOOKS + PORTFOLIOS
 
@@ -66,11 +71,10 @@ BOOK_LABELS = {
     "C": "Intraday MR + Momentum Flip",
     "D": "Contrarian Bubble Score",
     "E": "Reddit Sentiment Long-Only",
-    "D14": "Contrarian Bubble Score (14h sleeve)",
     "F": "Universe Hourly Momentum Long",
     "FixedEW": "Fixed Equal-Weight Portfolio",
     "MomAlloc": "Momentum-Allocation Portfolio",
-    "IvolVT": "Champion: Inverse-Vol + 15% Vol-Target (A/C/D/D14/F)",
+    "IvolVT": "Champion: Inverse-Vol + 15% Vol-Target (A/C/D/F, D=2-sleeve blend)",
 }
 
 # ── Champion (IvolVT) allocator settings ────────────────────────────
@@ -124,9 +128,8 @@ PARAMS = {
         hold_hours=8, top_n=20,
         tc_one_way=TC_ONE_WAY,
     ),
-    # D14: second contrarian sleeve — same signal, 14h harvest horizon.
-    # Promoted 2026-08-16 (Cycle 12): standalone Sharpe 2.665/-12.1%;
-    # champion with both sleeves 2.781/-8.2% (robustness 11/11).
+    # D14: INTERNAL sleeve params for blended Book D (not a standalone book).
+    # Same signal as D, 14h harvest horizon; settle averages the two sleeves.
     "D14": dict(
         bubble_ma_hours=104, threshold=-0.8,
         hold_hours=14, top_n=20,
