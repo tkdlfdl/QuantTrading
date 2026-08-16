@@ -86,6 +86,12 @@ marks — never reread listed papers): **`research/papers_read.md`** (40 papers)
 overlay on A+C+D+F (no B) — Sharpe 2.501, MaxDD -8.9%** vs prior Fixed EW
 2.060/-19.0%. Optional DM panic gate adds insurance at no cost.
 
+**UPDATE 2026-08-16 (Cycle 12): promotion-grade improvement.** Adding a second
+contrarian sleeve **D14** (official D engine, hold=14h) as a fifth book lifts
+the champion to **Sharpe 2.781 / CAGR 43.9% / MaxDD -8.2%** (robustness 11/11,
+verifier PASS). Records: `portfolio_champ_d14`. Live adoption pending human
+sign-off (requires D14 in settle replay + champion allocation).
+
 ### Tested, no gain (kept for the record)
 ERC (1.57), HRP (1.82), Sharpe-weighting (1.80), plain inverse-vol (DD breach),
 Nagel VIX-scaling of D (2.479 < champion), Barroso overlay on Book A (UVXY hedge

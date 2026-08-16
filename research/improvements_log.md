@@ -51,3 +51,17 @@ exact metric deltas vs its baseline. Appended automatically by
 - **MaxDD:**  0.0% → -23.4%  (-23.4%)
 - **Records:** book_h_breadth_timing
 - **Notes:** hold 20d; corr {'A': 0.25861050889914233, 'C': 0.02390735944951421, 'D': 0.3776107927926821, 'F': 0.2958182303808347}; PENDING: incubation per Phase 2, human sign-off
+
+### 2026-08-16 — HAR-X vol forecast (SPY intraday RV) for champion overlay
+- **Source:** Corsi 2009 + own intraday RV (registry #60 revisit)
+- **Sharpe:** 2.580 → 2.632  (**+0.052**)
+- **CAGR:**   43.5% → 38.9%  (-4.6%)
+- **MaxDD:**  -8.9% → -8.9%  (+0.0%)
+- **Records:** portfolio_champ_harx
+
+### 2026-08-16 — D14 aggressive sleeve added as fifth book
+- **Source:** Own grid finding (registry #45 note)
+- **Sharpe:** 2.580 → 2.781  (**+0.201**)
+- **CAGR:**   43.5% → 43.9%  (+0.4%)
+- **MaxDD:**  -8.9% → -8.2%  (+0.7%)
+- **Records:** portfolio_champ_d14

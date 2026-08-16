@@ -80,7 +80,7 @@
 | 57 | Guttal et al. (2016), PLOS ONE | Econophysics/EWS | 2026-08-15 | rejected | Valuable negative: no critical-slowing-down before financial crashes — kills CSD drawdown pre-alarm idea |
 | 58 | Sornette LPPLS corpus (Bree-Joseph 2013; Shu 2024) | Econophysics/bubbles | 2026-08-15 | rejected | Fit fragility, mixed OOS — no LPPLS timing overlay |
 | 59 | HMM regime literature (incl. arXiv:2406.09578) | Regime | 2026-08-15 | rejected | Superseded by jump models (#42) for our use |
-| 60 | Corsi (2009), J. Fin. Econometrics | Vol forecasting/HAR | 2026-08-15 | tested-no-gain | HAR on daily r^2 proxy HURTS (2.274 vs 2.580) — needs true intraday RV; book-level hourly-P&L RV variant = possible future item |
+| 60 | Corsi (2009), J. Fin. Econometrics | Vol forecasting/HAR | 2026-08-16 | **IMPROVED** ⭐ (marginal) | Cycle 12 revisit with SPY INTRADAY RV (HAR-X): 2.632 vs 2.580 at same DD — proxy was the problem, as suspected. Superseded by D14 promotion (HAR-X adds nothing on top) |
 | 61 | Andersen, Bollerslev, Diebold & Labys (2003), Econometrica | Vol forecasting/RV | 2026-08-15 | tested-no-gain | See #60 — daily proxy defeats the RV framework |
 | 62 | Bollerslev, Patton & Quaedvlieg (2016), J. Econometrics | Vol forecasting/HARQ | 2026-08-15 | rejected | Moot given #60 outcome with our proxy |
 | 63 | Patton & Sheppard (2015), REStat | Vol forecasting/semivariance | 2026-08-15 | rejected | Moot given #60 outcome with our proxy |
@@ -104,3 +104,4 @@
 | 81 | Greenwood & Sammon (2025), JF | Index reconstitution | 2026-08-16 | rejected | Inclusion effect gone in modern data; we also lack membership history |
 | 82 | Baker-Haugen low-vol corpus (CFA 2024 review) | Low-vol anomaly | 2026-08-16 | rejected | Beta channel + 2015-2024 underperformance; parked as bench idea |
 | 83 | (original — Cycle 9 synthesis) | Original/index timing | 2026-08-16 | tested-no-gain (BENCHED) | Breadth timing: standalone 0.896/corr≤0.38 PASSED, but portfolio-contribution test FAILED: champ+H 2.504 < 2.580 (ivol over-allocates to its 67%-cash profile; 12.5% CAGR dilutes). Bench note: conditional/satellite funding on signal days = possible future variant |
+| 84 | (original — Cycle 12, registry #45 note) | Original/D sleeve | 2026-08-16 | **IMPROVED** ⭐⭐ | D14 sleeve as 5th book: champion 2.580 -> **2.781 / 43.9% / -8.2%**; robustness 11/11; verifier PASS. QUALIFIES FOR FULL PROMOTION (pending human sign-off for live adoption). H cash-sleeve near-miss (2.628, +0.048) also from this cycle |

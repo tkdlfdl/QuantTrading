@@ -11,6 +11,15 @@ angle; unread papers and untested ideas come first).
 
 ## Done
 
+- **2026-08-16 | Cycle 12 | Introspection battery — TWO IMPROVEMENTS, ONE PROMOTION-GRADE**
+  (a) HAR-X w/ SPY intraday RV: 2.632 (+0.05, marginal ⭐ — fixed Cycle 7's proxy
+  problem); (b) H cash-sleeve: 2.628 (+0.048, near-miss); (c) **D14 fifth book:
+  2.781 / 43.9% / -8.2% — +0.20 Sharpe, better DD, robustness 11/11, verifier
+  PASS. QUALIFIES FOR CHAMPION PROMOTION — pending human decision to add the
+  D14 sleeve to the live engine (settle replay + ALLOC_BOOKS + IvolVT).**
+  Stack (D14+HAR-X) adds nothing (2.770, -6.5pp CAGR) — simple config wins.
+  Records: portfolio_champ_d14, portfolio_champ_harx, book_d14_daily.csv.
+
 - **2026-08-16 | Cycle 11 | #14 CDaR allocation — tested-no-gain**
   nu=5%: 2.476/-10.4%; nu=8%: 2.279/-13.2% vs champion 2.580/-8.9%. Fifth
   optimization-based allocator to lose to inverse-vol + vol-target (DeMiguel

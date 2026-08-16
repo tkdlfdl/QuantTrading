@@ -115,3 +115,13 @@ timestamp,name,check,verdict,detail
 2026-08-16T04:03:25+00:00,book_h_breadth_timing,C3-metrics,PASS,recomputed metrics match history.json
 2026-08-16T04:03:25+00:00,book_h_breadth_timing,C4-integrity,PASS,"n=1448, zero-days 67%, max |ret| 11.8%"
 2026-08-16T04:03:25+00:00,book_h_breadth_timing,OVERALL,PASS,4/3 checks clean
+2026-08-16T12:51:53+00:00,portfolio_champ_harx,C1-sign,PASS,"Sharpe 2.63, total 1071.36% — signs consistent"
+2026-08-16T12:51:53+00:00,portfolio_champ_harx,C2-maxdd,PASS,MaxDD -8.88% over 1889 days
+2026-08-16T12:51:53+00:00,portfolio_champ_harx,C3-metrics,PASS,recomputed metrics match history.json
+2026-08-16T12:51:53+00:00,portfolio_champ_harx,C4-integrity,PASS,"n=1889, zero-days 0%, max |ret| 7.3%"
+2026-08-16T12:51:53+00:00,portfolio_champ_harx,OVERALL,PASS,4/3 checks clean
+2026-08-16T12:51:54+00:00,portfolio_champ_d14,C1-sign,PASS,"Sharpe 2.78, total 1433.44% — signs consistent"
+2026-08-16T12:51:54+00:00,portfolio_champ_d14,C2-maxdd,PASS,MaxDD -8.24% over 1889 days
+2026-08-16T12:51:54+00:00,portfolio_champ_d14,C3-metrics,PASS,recomputed metrics match history.json
+2026-08-16T12:51:54+00:00,portfolio_champ_d14,C4-integrity,PASS,"n=1889, zero-days 0%, max |ret| 7.3%"
+2026-08-16T12:51:54+00:00,portfolio_champ_d14,OVERALL,PASS,4/3 checks clean
