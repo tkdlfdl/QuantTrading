@@ -110,3 +110,8 @@ timestamp,name,check,verdict,detail
 2026-08-16T02:42:12+00:00,portfolio_champion_cappedC,C3-metrics,PASS,recomputed metrics match history.json
 2026-08-16T02:42:12+00:00,portfolio_champion_cappedC,C4-integrity,PASS,"n=1889, zero-days 0%, max |ret| 8.5%"
 2026-08-16T02:42:12+00:00,portfolio_champion_cappedC,OVERALL,PASS,4/3 checks clean
+2026-08-16T04:03:25+00:00,book_h_breadth_timing,C1-sign,PASS,"Sharpe 0.90, total 96.64% — signs consistent"
+2026-08-16T04:03:25+00:00,book_h_breadth_timing,C2-maxdd,PASS,MaxDD -23.44% over 1448 days
+2026-08-16T04:03:25+00:00,book_h_breadth_timing,C3-metrics,PASS,recomputed metrics match history.json
+2026-08-16T04:03:25+00:00,book_h_breadth_timing,C4-integrity,PASS,"n=1448, zero-days 67%, max |ret| 11.8%"
+2026-08-16T04:03:25+00:00,book_h_breadth_timing,OVERALL,PASS,4/3 checks clean

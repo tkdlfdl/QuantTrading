@@ -196,6 +196,27 @@ update the human-readable `BACKTEST_PERFORMANCE.md` with any changed parameters
 or headline metrics. Use `<name>` consistently (e.g. `book_d_contrarian`) so
 records accumulate and correlations stay comparable across runs.
 
+### New-strategy portfolio-contribution test (REQUIRED for every new strategy)
+
+A new strategy's standalone metrics are NOT the acceptance criterion. Whenever
+a new strategy is created and its standalone backtest is verified, ALWAYS run
+the portfolio-contribution test before any adoption recommendation:
+
+1. Rebuild the current champion portfolio (allocator + overlays per
+   `live/config.py`) WITH the new strategy added as an additional book, using
+   its verified daily series.
+2. Compare against the current champion frontier (see BACKTEST_PERFORMANCE.md
+   / latest `portfolio_champion_*` record) on Sharpe, CAGR, and MaxDD.
+3. **Worth adding** = the with-strategy portfolio improves Sharpe or CAGR with
+   MaxDD ≤ 1.2× the champion's. Then recommend adoption (via the Phase-2
+   incubation path — live capital remains human-gated).
+4. **Not worth adding** = portfolio does not improve, regardless of how good
+   the strategy looks standalone (high correlation to existing books usually
+   explains it — report the correlations). Bench it; record the test anyway.
+5. Record the with-strategy portfolio series (`portfolio_champion_plus_<name>`)
+   and log the outcome in the improvements ledger (if improved) or the registry
+   notes (if benched).
+
 ### Improvement attribution (REQUIRED whenever a result beats its baseline)
 
 Any result that improves on its baseline must also be logged with attribution

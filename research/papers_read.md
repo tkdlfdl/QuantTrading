@@ -53,10 +53,10 @@
 | 30 | De Bondt & Thaler (1985), JF | LT reversal | 2026-08-15 | rejected | 3-5yr reversal horizon too slow for our stack; decayed post-publication (per #35 haircut) |
 | 31 | George & Hwang (2004), JF | 52-wk-high momentum | 2026-08-15 | tested-no-gain | STRONG negative: ranking swap gives Sharpe -0.01 vs 1.548 — near-high names are the OPPOSITE of F's explosive-mover edge on this universe/period |
 | 32 | Gatev, Goetzmann & Rouwenhorst (2006), RFS | Pairs trading | 2026-08-15 | rejected | Profits decayed to ~0 post-2002 in follow-ups; high infra cost |
-| 33 | Lou, Polk & Skouras (2019), JFE | Overnight/intraday | 2026-08-15 | tested-no-gain | Re-timed entries/exits: 1.424 vs 1.548 — overnight alignment diluted at 200h holds, as the sweep predicted |
+| 33 | Lou, Polk & Skouras (2019), JFE | Overnight/intraday | 2026-08-16 | tested-no-gain | (1) F re-timing 1.424<1.548; (2) cross-sectional overnight-share book: standalone 0.988/corr<=0.28 but portfolio 2.511 < 2.580 — best benched candidate, revisit if book mix changes |
 | 34 | Medhat & Schmeling (2022), RFS | ST momentum/turnover | 2026-08-15 | tested-no-gain | 28yr test: 0.753/-56.9% vs control 0.695/-72.2% — condition effect +0.06 real but small; corr 0.55 to F; fails new-book bar. Caveat: volume-intensity proxy, not true share turnover |
 | 35 | McLean & Pontiff (2016), JF | Meta/decay | 2026-08-15 | rejected | 26% in-sample→58% post-publication decay haircut — applied as prior to all candidates, not a strategy itself |
-| 36 | Gervais, Kaniel & Mingelgrin (2001), JF | Volume premium | 2026-08-15 | pending | High-volume premium as Book D eligibility filter — untested |
+| 36 | Gervais, Kaniel & Mingelgrin (2001), JF | Volume premium | 2026-08-16 | tested-no-gain | Standalone 0.875 but corr 0.54 to D; portfolio-contribution 2.398 < 2.580 — volume shocks select the same oversold names D already buys |
 | 37 | Amihud (2002), JFM | Illiquidity | 2026-08-15 | rejected | Illiquidity premium lives in small caps outside our S&P500/NDX universe |
 | 38 | Heston & Sadka (2008), JFE | Seasonality | 2026-08-15 | rejected | Same-calendar-month momentum: weak post-publication, monthly horizon poor fit |
 | 39 | Ariel (1987); Lakonishok & Smidt (1988), JF | Turn-of-month | 2026-08-15 | rejected | TOM effect too small after costs at our position sizes; decayed |
@@ -80,22 +80,27 @@
 | 57 | Guttal et al. (2016), PLOS ONE | Econophysics/EWS | 2026-08-15 | rejected | Valuable negative: no critical-slowing-down before financial crashes — kills CSD drawdown pre-alarm idea |
 | 58 | Sornette LPPLS corpus (Bree-Joseph 2013; Shu 2024) | Econophysics/bubbles | 2026-08-15 | rejected | Fit fragility, mixed OOS — no LPPLS timing overlay |
 | 59 | HMM regime literature (incl. arXiv:2406.09578) | Regime | 2026-08-15 | rejected | Superseded by jump models (#42) for our use |
-| 60 | Corsi (2009), J. Fin. Econometrics | Vol forecasting/HAR | 2026-08-15 | pending | HAR-RV — queue #11: overlay vol-estimator swap (top priority: biggest lever) |
-| 61 | Andersen, Bollerslev, Diebold & Labys (2003), Econometrica | Vol forecasting/RV | 2026-08-15 | pending | log-RV foundations — enabler of #11 |
-| 62 | Bollerslev, Patton & Quaedvlieg (2016), J. Econometrics | Vol forecasting/HARQ | 2026-08-15 | pending | HARQ variant of #11 |
-| 63 | Patton & Sheppard (2015), REStat | Vol forecasting/semivariance | 2026-08-15 | pending | Semivariance HAR variant of #11 |
-| 64 | Corsi & Renò (2012), JBES | Vol forecasting/leverage | 2026-08-15 | pending | Leverage HAR variant of #11 |
-| 65 | Yang & Zhang (2000), J. Business | Vol estimation/range | 2026-08-15 | pending | Range-based RV proxy; component of #15 committee |
+| 60 | Corsi (2009), J. Fin. Econometrics | Vol forecasting/HAR | 2026-08-15 | tested-no-gain | HAR on daily r^2 proxy HURTS (2.274 vs 2.580) — needs true intraday RV; book-level hourly-P&L RV variant = possible future item |
+| 61 | Andersen, Bollerslev, Diebold & Labys (2003), Econometrica | Vol forecasting/RV | 2026-08-15 | tested-no-gain | See #60 — daily proxy defeats the RV framework |
+| 62 | Bollerslev, Patton & Quaedvlieg (2016), J. Econometrics | Vol forecasting/HARQ | 2026-08-15 | rejected | Moot given #60 outcome with our proxy |
+| 63 | Patton & Sheppard (2015), REStat | Vol forecasting/semivariance | 2026-08-15 | rejected | Moot given #60 outcome with our proxy |
+| 64 | Corsi & Renò (2012), JBES | Vol forecasting/leverage | 2026-08-15 | rejected | Moot given #60 outcome with our proxy |
+| 65 | Yang & Zhang (2000), J. Business | Vol estimation/range | 2026-08-15 | untestable | Portfolio return series has no OHLC; would need book-level reconstruction |
 | 66 | Gatheral, Jaisson & Rosenbaum (2018), Quant. Fin. | Vol/rough | 2026-08-15 | rejected | Rough vol validates HAR at our horizons; RFSV effort not justified |
 | 67 | Ghashghaie et al. (1996), Nature | Econophysics/cascade | 2026-08-15 | rejected | Conceptual ancestor of HAR only |
-| 68 | Preis, Kenett, Stanley, Helbing & Ben-Jacob (2012), Sci. Rep. | Correlation dynamics | 2026-08-15 | pending | Mean-correlation spike fragility gate — queue #13 |
+| 68 | Preis, Kenett, Stanley, Helbing & Ben-Jacob (2012), Sci. Rep. | Correlation dynamics | 2026-08-16 | tested-no-gain | Corr-spike gate 2.532 < 2.580 — DM panic gate already covers fragile periods |
 | 69 | Onnela et al. (2003), Phys. Rev. E | Correlation/MST | 2026-08-15 | rejected | Corroborates #68; MST machinery unnecessary |
 | 70 | Munnix et al. (2012), Sci. Rep. | Correlation states | 2026-08-15 | rejected | Heavier cousin of #68 scalars; deferred |
-| 71 | Kritzman, Li, Page & Rigobon (2011), JPM | Absorption ratio | 2026-08-15 | pending | Trading-rule form of #13 (practitioner-journal caution) |
+| 71 | Kritzman, Li, Page & Rigobon (2011), JPM | Absorption ratio | 2026-08-16 | tested-no-gain | See #68 |
 | 72 | Curme et al. (2015), Quant. Fin. | Lead-lag networks | 2026-08-15 | rejected | Needs <=15-min sampling; decayed post-2011 |
 | 73 | Huth & Abergel (2014), J. Emp. Fin. | Lead-lag/HF | 2026-08-15 | rejected | Seconds-scale, tick data required |
-| 74 | Chekhlov, Uryasev & Zabarankin (2005), IJTAF | OR/CDaR | 2026-08-15 | pending | Drawdown-constrained LP allocator — queue #14 |
-| 75 | Goldberg & Mahmoud (2017), Math. Fin. Econ. | OR/drawdown theory | 2026-08-15 | pending | CED loads on loss autocorrelation — mechanism for #14 |
+| 74 | Chekhlov, Uryasev & Zabarankin (2005), IJTAF | OR/CDaR | 2026-08-16 | tested-no-gain | CDaR LP nu=5%: 2.476/-10.4%; nu=8%: 2.279 — loses to ivol+VT champion; 5th optimizer to fail vs simple weights (DeMiguel confirmed again) |
+| 75 | Goldberg & Mahmoud (2017), Math. Fin. Econ. | OR/drawdown theory | 2026-08-16 | tested-no-gain | See #74 |
 | 76 | Hamilton (1989), Econometrica | Regime switching | 2026-08-15 | rejected | Regime-gate slot resolved (#42, #27); do not rebuild |
-| 77 | Bates & Granger (1969), ORQ | Forecast combination | 2026-08-15 | pending | Inverse-QLIKE vol-forecast committee — queue #15 |
-| 78 | Stivers & Sun (2010), JFQA | Dispersion/momentum | 2026-08-15 | pending | Dispersion throttle on A/F — queue #12 (1997-2018 pre-test first) |
+| 77 | Bates & Granger (1969), ORQ | Forecast combination | 2026-08-15 | tested-no-gain | Committee 2.559 < anchor 2.580 — dragged by weak HAR member; EWMA-only wash (+0.017) |
+| 78 | Stivers & Sun (2010), JFQA | Dispersion/momentum | 2026-08-16 | tested-no-gain | Pre-test 1997-2018 on Book A: t=-0.73, no effect — killed in-sample, OOS window preserved |
+| 79 | Etula, Rinne, Suominen & Vaittinen (2020), RFS | Calendar/dash-for-cash | 2026-08-16 | tested-no-gain | TOM 1997-2026: Sharpe 0.255 — effect too weak after costs; portfolio 2.248 |
+| 80 | Bollerslev, Tauchen & Zhou (2009), RFS | Variance risk premium | 2026-08-16 | tested-no-gain | VRP timing 0.347 < matched-beta 0.505 — fails the beta test outright |
+| 81 | Greenwood & Sammon (2025), JF | Index reconstitution | 2026-08-16 | rejected | Inclusion effect gone in modern data; we also lack membership history |
+| 82 | Baker-Haugen low-vol corpus (CFA 2024 review) | Low-vol anomaly | 2026-08-16 | rejected | Beta channel + 2015-2024 underperformance; parked as bench idea |
+| 83 | (original — Cycle 9 synthesis) | Original/index timing | 2026-08-16 | tested-no-gain (BENCHED) | Breadth timing: standalone 0.896/corr≤0.38 PASSED, but portfolio-contribution test FAILED: champ+H 2.504 < 2.580 (ivol over-allocates to its 67%-cash profile; 12.5% CAGR dilutes). Bench note: conditional/satellite funding on signal days = possible future variant |

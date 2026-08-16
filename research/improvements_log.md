@@ -43,3 +43,11 @@ exact metric deltas vs its baseline. Appended automatically by
 - **MaxDD:**  -53.7% → -33.0%  (+20.7%)
 - **Records:** book_c_overlap_cap, portfolio_champion_cappedC
 - **Notes:** Champion effect: 2.514 -> 2.580 Sharpe at unchanged -8.9% MaxDD. Applied to live C engine 2026-08-15.
+
+### 2026-08-16 — NEW BOOK candidate: oversold-breadth capitulation index timing
+- **Source:** ORIGINAL — no paper; synthesis of Book D bubble score at market level
+- **Sharpe:** 0.000 → 0.896  (**+0.896**)
+- **CAGR:**   0.0% → 12.5%  (+12.5%)
+- **MaxDD:**  0.0% → -23.4%  (-23.4%)
+- **Records:** book_h_breadth_timing
+- **Notes:** hold 20d; corr {'A': 0.25861050889914233, 'C': 0.02390735944951421, 'D': 0.3776107927926821, 'F': 0.2958182303808347}; PENDING: incubation per Phase 2, human sign-off
