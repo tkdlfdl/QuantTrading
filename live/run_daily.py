@@ -81,12 +81,12 @@ def main(argv=None):
         print("  [run] state reset to flat.")
 
     # ── Phase 0: prepare data ───────────────────────────────────────
-    print("Phase 0 — prepare data")
+    print("Phase 0 - prepare data")
     last_complete = PREP.prepare(refresh=not no_refresh)
 
     # ── Phase 0b: refresh Reddit sentiment for Book E (non-fatal) ────
     if "--no-sentiment" not in argv:
-        print("Phase 0b — refresh sentiment (Book E)")
+        print("Phase 0b - refresh sentiment (Book E)")
         try:
             from . import refresh_sentiment
             refresh_sentiment.main([])
@@ -105,7 +105,7 @@ def main(argv=None):
     inception = pd.Timestamp(store.inception)
 
     # ── Phase 1: settle (replay all books, rebuild live equity) ─────
-    print("Phase 1 — settle (replay books)")
+    print("Phase 1 - settle (replay books)")
     panels = S.load_panels()
     book_rets, positions, trades_df = SETTLE.replay_all(panels)
 
@@ -122,9 +122,11 @@ def main(argv=None):
         abcd = live[C.BOOKS]
         fixedew = E.fixed_ew(abcd)
         momalloc = E.mom_alloc(abcd)
+        ivolvt = E.ivol_voltgt(abcd)      # champion combiner (A/C/D/F per ALLOC_BOOKS)
         allr = abcd.copy()
         allr["FixedEW"] = fixedew
         allr["MomAlloc"] = momalloc
+        allr["IvolVT"] = ivolvt
         # align all books to the common live calendar; missing = flat (no position)
         allr = allr.fillna(0.0)
 
@@ -146,7 +148,7 @@ def main(argv=None):
               f"({live.shape[0]} trading days, {len(C.ALL_BOOKS)} books).")
 
     # ── Phase 2: plan next session ──────────────────────────────────
-    print("Phase 2 — plan next session")
+    print("Phase 2 - plan next session")
     plan = PLAN.generate_plan(panels, last_complete)
     path = PLAN.write_plan(plan)
     store.meta["last_planned_date"] = plan["for_session"]
@@ -154,11 +156,11 @@ def main(argv=None):
     print(f"  [run] wrote plan for {plan['for_session']} -> {path}")
 
     # ── Phase 3: report ─────────────────────────────────────────────
-    print("Phase 3 — report")
+    print("Phase 3 - report")
     REPORT.render()
 
     # ── Phase 4: EOD Excel report (live Alpaca account) — non-fatal ──
-    print("Phase 4 — EOD Excel report")
+    print("Phase 4 - EOD Excel report")
     try:
         from . import eod_report
         eod_report.build()

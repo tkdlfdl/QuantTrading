@@ -78,7 +78,44 @@ def _row(pid, tk, sub, ts, title, ups, ncom):
             "upvotes": int(ups or 0), "num_comments": int(ncom or 0), **sc}
 
 
-# ── Source 1: PRAW (Reddit official API — reliable, needs credentials) ──────
+# ── Source 1: Reddit public JSON feed (no credentials needed) ───────────────
+def scan_via_reddit_json(universe, subreddits=SUBREDDITS, feeds=FEEDS,
+                         limit=100, sleep=2.0, verbose=True) -> pd.DataFrame:
+    """
+    Scan subreddit feeds using Reddit's own public .json endpoints.
+    No credentials required. Pulls new+hot feeds, extracts ticker mentions.
+    """
+    uni = {u.upper() for u in universe}
+    rows = []
+    for sub in subreddits:
+        for feed in feeds:
+            children = _fetch_feed(sub, feed, limit, sleep)
+            if not children:
+                if verbose:
+                    print(f"  r/{sub}/{feed}: no data")
+                continue
+            n = 0
+            for child in children:
+                p = child.get("data", {})
+                text = f"{p.get('title', '')} {p.get('selftext', '') or ''}"
+                tks = _extract_tickers(text, uni)
+                if not tks:
+                    continue
+                ts = datetime.fromtimestamp(
+                    p.get("created_utc", 0), tz=timezone.utc
+                ).replace(tzinfo=None)
+                for tk in tks:
+                    rows.append(_row(p.get("id", ""), tk, sub, ts,
+                                     p.get("title", ""),
+                                     p.get("score", 0), p.get("num_comments", 0)))
+                    n += 1
+            if verbose:
+                print(f"  r/{sub}/{feed}: {len(children)} posts -> {n} ticker mentions")
+    df = pd.DataFrame(rows, columns=_COLS) if rows else pd.DataFrame(columns=_COLS)
+    return df.drop_duplicates(subset=["post_id", "symbol"]) if not df.empty else df
+
+
+# ── Source 2: PRAW (Reddit official API — reliable, needs credentials) ──────
 def scan_via_praw(universe, client_id, client_secret, subreddits=SUBREDDITS,
                   limit=200, verbose=True) -> pd.DataFrame:
     import praw

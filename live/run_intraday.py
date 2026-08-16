@@ -47,14 +47,34 @@ def market_open_now() -> bool:
     return o <= et <= c
 
 
-# ── MomAlloc per-book weights from the live track record ─────────────
+# ── Per-book weights for the live account, per C.LIVE_BOOK ───────────
 def book_weights_from_equity() -> dict:
-    """Latest 60d-Sharpe weights per book (clip>=0, normalise); equal-weight fallback."""
+    """Weights the Alpaca account mirrors. LIVE_BOOK == "IvolVT" -> champion
+    (inverse-vol over ALLOC_BOOKS x panic gate x vol-target scale; B/E get 0).
+    Otherwise falls back to the legacy 60d-Sharpe MomAlloc weights."""
     if not C.EQUITY_FILE.exists():
+        if C.LIVE_BOOK == "IvolVT":
+            return {b: (1.0/len(C.ALLOC_BOOKS) if b in C.ALLOC_BOOKS else 0.0)
+                    for b in C.BOOKS}
         return {b: 1.0/len(C.BOOKS) for b in C.BOOKS}
     eq = pd.read_csv(C.EQUITY_FILE, parse_dates=["date"])
     piv = eq.pivot_table(index="date", columns="book", values="daily_ret")
     piv = piv.reindex(columns=C.BOOKS)
+
+    if C.LIVE_BOOK == "IvolVT":
+        from . import engine as E
+        panic = bool(E._panic_state().iloc[-1]) if C.PANIC_GATE else False
+        w = E.ivol_vt_weights(piv.fillna(0.0), panic_today=panic)
+        # vol-target scale from the champion's own live series (if tracked)
+        scale = 1.0
+        champ = eq[eq["book"] == "IvolVT"]
+        if not champ.empty and len(champ) >= C.VT_VOL_WINDOW:
+            scale = E.vt_scale_today(champ.set_index("date")["daily_ret"])
+        out = {b: 0.0 for b in C.BOOKS}
+        for b, x in w.items():
+            out[b] = float(x * scale)          # scale<1 -> remainder stays in cash
+        return out
+
     if len(piv) < C.MOM_ALLOC_MIN_DAYS:
         return {b: 1.0/len(C.BOOKS) for b in C.BOOKS}
     win = piv.tail(C.MOM_ALLOC_WINDOW)

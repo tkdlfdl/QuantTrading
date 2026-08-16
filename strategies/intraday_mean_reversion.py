@@ -100,6 +100,10 @@ def run_intraday_mean_reversion(
     ):
         roll_mean, roll_std = roll_cache[lookback]
         ret_rows: list[tuple] = []
+        busy: dict[str, int] = {}   # per-ticker overlap cap (Improvement Cycle 1,
+                                    # 2026-08-15): ticker -> held-until day index.
+                                    # Prevents consecutive-signal exposure stacking
+                                    # (HOOD 2021-08: ~2x single-stock -> -53.7% MDD).
 
         for sig_date, exec_date in trade_pairs:
             sig_ts = pd.Timestamp(sig_date)
@@ -121,6 +125,12 @@ def run_intraday_mean_reversion(
                 positions[t] = 1
             for t in short_cands.index:
                 positions[t] = -1
+
+            # overlap cap: skip tickers still held by an open trade
+            _exec_i = day_to_idx.get(exec_date)
+            if _exec_i is not None:
+                for t in [t for t in positions if busy.get(t, -1) >= _exec_i]:
+                    positions.pop(t)
 
             if not positions:
                 ret_rows.append((exec_date, 0.0))
@@ -192,6 +202,11 @@ def run_intraday_mean_reversion(
 
             daily_port_ret = float(np.mean(pos_rets)) if pos_rets else 0.0
             ret_rows.append((exec_date, daily_port_ret))
+
+            # overlap cap: mark tickers as held until phase-2 exit day
+            _held_until = exec_i if flip_hold == 0 else p2_exit_i
+            for t in positions:
+                busy[t] = _held_until
 
         if not ret_rows:
             continue

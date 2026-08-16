@@ -34,5 +34,6 @@ live/state/
 live/reports/
 *.log
 
-# Claude Code
-.claude/
+# Claude Code (but DO version the subagent definitions — core pipeline infrastructure)
+.claude/*
+!.claude/agents/

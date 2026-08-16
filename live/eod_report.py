@@ -43,7 +43,7 @@ BOOK_LABEL = {"A": "Momentum", "B": "QQQ Bubble", "C": "Intraday MR",
 def _client():
     k, s = C.load_alpaca_creds()
     if not (k and s):
-        print("No Alpaca credentials — cannot build EOD report.")
+        print("No Alpaca credentials - cannot build EOD report.")
         sys.exit(1)
     from alpaca.trading.client import TradingClient
     return TradingClient(k, s, paper=True)
@@ -76,8 +76,12 @@ def _book_weights():
     return {b: float(sh.get(b, 0) / tot) for b in C.BOOKS} if tot > 0 else {b: 0.25 for b in C.BOOKS}
 
 
-def _safe_to_csv(df, path, retries=3, wait=2.0):
-    """Write CSV, tolerating transient file locks (e.g. open in Excel)."""
+def _safe_to_csv(df, path, retries=10, wait=1.0):
+    """Write CSV, tolerating transient file locks (e.g. open in Excel).
+
+    Retries 10 times with 1-second wait (total 10 sec) to handle Excel locks gracefully.
+    If still locked after 10 attempts, warns but continues (data will retry next run).
+    """
     import time
     for a in range(retries):
         try:
@@ -86,7 +90,9 @@ def _safe_to_csv(df, path, retries=3, wait=2.0):
         except PermissionError:
             if a < retries - 1:
                 time.sleep(wait)
-    print(f"  [eod] {path.name} locked — skipped this write (data kept for next run).")
+            elif a == retries - 1:
+                print(f"  [eod] WARNING: {path.name} locked after {retries} retries - close Excel workbook if stuck.")
+    print(f"  [eod] {path.name} locked - retrying next run (data accumulated in-memory for now).")
     return False
 
 
@@ -109,7 +115,8 @@ def _upsert(path, df_new, key_cols):
 
 def _metrics(daily_ret: pd.Series):
     r = daily_ret.dropna()
-    if len(r) < 2 or r.std() == 0:
+    # Need minimum 20 days for meaningful Sharpe/MaxDD; below that, too noisy
+    if len(r) < 20 or r.std() == 0:
         return 0.0, 0.0
     sh = (r - RF / TD).mean() / r.std() * np.sqrt(TD)
     w = (1 + r).cumprod()
@@ -118,7 +125,7 @@ def _metrics(daily_ret: pd.Series):
 
 
 def _is_trading_day(cli, day: str) -> bool:
-    """Authoritative check via Alpaca's market calendar — was `day` a trading day?"""
+    """Authoritative check via Alpaca's market calendar - was `day` a trading day?"""
     try:
         from alpaca.trading.requests import GetCalendarRequest
         d = dt.date.fromisoformat(day)
@@ -136,7 +143,7 @@ def build(today=None, force=False):
 
     # Trading-day gate: only record EOD on actual market-open days
     if not force and not _is_trading_day(cli, today):
-        print(f"EOD report: {today} is not a trading day (market closed) — skipped.")
+        print(f"EOD report: {today} is not a trading day (market closed) - skipped.")
         return
 
     acct = cli.get_account()
@@ -218,7 +225,7 @@ def build(today=None, force=False):
         attributed_book_pnl=round(attributed, 2),
         unattributed=round(day_pnl - attributed, 2))])
     sm = _upsert(EOD_SUMMARY, summ_today, ["date"])
-    sm["date"] = pd.to_datetime(sm["date"])
+    sm["date"] = pd.to_datetime(sm["date"], format='mixed', dayfirst=False)
     sm = sm.sort_values("date")
     sh, dd = _metrics(sm.set_index("date")["day_ret"] / 100.0)
     sm["sharpe_itd"] = round(sh, 4)
@@ -230,7 +237,7 @@ def build(today=None, force=False):
     try:
         _write_excel()
     except PermissionError:
-        print("  [eod] track_record.xlsx locked (open in Excel?) — skipped workbook write.")
+        print("  [eod] track_record.xlsx locked (open in Excel?) - skipped workbook write.")
     print(f"EOD report for {today}:")
     print(f"  Equity ${equity:,.2f}  Day P&L ${day_pnl:+,.2f}  Total ${equity-START_EQUITY:+,.2f} "
           f"({(equity/START_EQUITY-1)*100:+.2f}%)")

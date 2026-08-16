@@ -1,0 +1,6 @@
+Strategy,Total Return %,Annual %,Sharpe,Max DD %,Days,Status
+A: Daily Momentum,+38.8,+4.9,0.41,-30.5,1732,OK
+B: Momentum+Bubble,+46.3,+5.7,0.51,-27.1,1732,OK
+C: Z-Score MR,+0.0,+0.0,0.00,0.0,1852,OK
+D: Contrarian Bubble,-100.0,-95.4,-9.35,-100.0,1732,OK
+E: Reddit Sentiment,N/A,N/A,N/A,N/A,0,No Data

@@ -41,11 +41,12 @@ def run_qqq_bubble_hourly(
     hourly_close: pd.Series,                    # QQQ hourly close prices
     ma_window_grid:  list = [20, 50, 100],      # hours for rolling MA
     z_window_grid:   list = [50, 100, 200],     # hours for z-score window
-    threshold_grid:  list = [0.5, 0.6, 0.7, 0.8, 0.9],  # entry threshold
+    buy_threshold_grid:  list = [0.5, 0.6, 0.7, 0.8, 0.9],  # buy entry threshold
+    short_threshold_grid: list = [0.85, 0.9, 0.92, 0.95, 0.97],  # short entry threshold
     hold_hours_grid: list = [1, 2, 4, 8, 24],  # bars to hold after entry
     transaction_cost: float = 0.001,            # 0.1% round-trip per trade
     short_borrow_rate: float = 0.08,            # 8%/yr borrowing cost on short positions
-    enable_short: bool = True,                  # trade short side (score > +threshold)
+    enable_short: bool = True,                  # trade short side (score > +short_threshold)
 ) -> tuple[pd.Series, dict, pd.DataFrame]:
     """
     Returns
@@ -61,7 +62,7 @@ def run_qqq_bubble_hourly(
     hc = hourly_close.copy()
     n  = len(ho)
 
-    total = len(ma_window_grid) * len(z_window_grid) * len(threshold_grid) * len(hold_hours_grid)
+    total = len(ma_window_grid) * len(z_window_grid) * len(buy_threshold_grid) * len(short_threshold_grid) * len(hold_hours_grid)
     print(f"Grid search: {total} combinations (QQQ hourly bubble)...")
 
     grid_results = []
@@ -74,8 +75,8 @@ def run_qqq_bubble_hourly(
     for ma, z in product(ma_window_grid, z_window_grid):
         score_cache[(ma, z)] = calculate_bubble_score(hc, ma, z)
 
-    for ma, z, thresh, hold in product(
-        ma_window_grid, z_window_grid, threshold_grid, hold_hours_grid
+    for ma, z, buy_thresh, short_thresh, hold in product(
+        ma_window_grid, z_window_grid, buy_threshold_grid, short_threshold_grid, hold_hours_grid
     ):
         raw_scores = score_cache[(ma, z)]
         # Shift by 1 bar: signal at bar i uses score from bar i-1 (no lookahead)
@@ -96,9 +97,9 @@ def run_qqq_bubble_hourly(
                 continue
 
             # Determine trade direction
-            if sig < -thresh:
+            if sig < -buy_thresh:
                 direction = 1   # LONG
-            elif enable_short and sig > thresh:
+            elif enable_short and sig > short_thresh:
                 direction = -1  # SHORT
             else:
                 continue
@@ -134,7 +135,7 @@ def run_qqq_bubble_hourly(
 
         if len(trades) < 5:
             grid_results.append(dict(
-                ma_window=ma, z_window=z, threshold=thresh, hold_hours=hold,
+                ma_window=ma, z_window=z, buy_threshold=buy_thresh, short_threshold=short_thresh, hold_hours=hold,
                 Sharpe=np.nan, Sortino=np.nan, Total_Return=np.nan,
                 Max_DD=np.nan, n_trades=len(trades), Win_Rate=np.nan,
             ))
@@ -161,7 +162,7 @@ def run_qqq_bubble_hourly(
         n_long  = int((tdf["direction"] == "LONG").sum())
         n_short = int((tdf["direction"] == "SHORT").sum())
         row = dict(
-            ma_window=ma, z_window=z, threshold=thresh, hold_hours=hold,
+            ma_window=ma, z_window=z, buy_threshold=buy_thresh, short_threshold=short_thresh, hold_hours=hold,
             Sharpe=sh, Sortino=so, Total_Return=tot, Max_DD=mdd,
             n_trades=len(trades), n_long=n_long, n_short=n_short,
             Win_Rate=wr, Avg_Net_Ret=float(tdf["net_ret"].mean()),

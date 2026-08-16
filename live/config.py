@@ -47,9 +47,14 @@ TRADING_HOURS    = 6.5           # regular-session hours per day
 NAN_MAX          = 0.30          # drop tickers with >30% NaN (per-book where relevant)
 
 # ── Books ───────────────────────────────────────────────────────────
-# Individual strategy books + two derived portfolios.
-BOOKS = ["A", "B", "C", "D", "E"]
-PORTFOLIOS = ["FixedEW", "MomAlloc"]
+# Individual strategy books + derived portfolios.
+BOOKS = ["A", "B", "C", "D", "E", "F"]
+# Books eligible for CHAMPION (IvolVT) capital — 2026-08-15 audit decisions:
+#   B dropped  : honest Sharpe 0.775, ~zero marginal portfolio contribution
+#   E excluded : audit Sharpe 0.63 full-history; sentiment feed stale since 2026-06
+# B and E keep running as paper track records; they receive no champion capital.
+ALLOC_BOOKS = ["A", "C", "D", "F"]
+PORTFOLIOS = ["FixedEW", "MomAlloc", "IvolVT"]
 ALL_BOOKS = BOOKS + PORTFOLIOS
 
 BOOK_LABELS = {
@@ -58,9 +63,28 @@ BOOK_LABELS = {
     "C": "Intraday MR + Momentum Flip",
     "D": "Contrarian Bubble Score",
     "E": "Reddit Sentiment Long-Only",
+    "F": "Universe Hourly Momentum Long",
     "FixedEW": "Fixed Equal-Weight Portfolio",
     "MomAlloc": "Momentum-Allocation Portfolio",
+    "IvolVT": "Champion: Inverse-Vol + 15% Vol-Target (A/C/D/F)",
 }
+
+# ── Champion (IvolVT) allocator settings ────────────────────────────
+# Backtest (retest_construction_methods.py + retest_regime_overlays.py,
+# recorded portfolio_ivol_voltgt_nob / portfolio_champ_panic_nob):
+#   Sharpe 2.501-2.514, CAGR ~45%, MaxDD -8.9% (2019-2026)
+# vs Fixed EW honest baseline 2.060 / -19.0%.  Papers: Moreira-Muir 2017 JF;
+# Harvey et al. 2018 JPM; Qian 2005; Daniel-Moskowitz 2016 JFE (panic gate).
+IVOL_WINDOW       = 60      # trailing days for book-vol estimation
+IVOL_REBAL_DAYS   = 21      # recompute inverse-vol weights every N trading days
+VOL_TARGET_ANN    = 0.15    # 15% annualized portfolio vol target
+VT_VOL_WINDOW     = 20      # trailing days for realized portfolio vol
+VT_MAX_SCALE      = 1.0     # de-risk only — never lever above 1.0
+PANIC_GATE        = True    # Daniel-Moskowitz panic state: halve A/F, redeploy to D
+PANIC_RET_LOOKBACK = 504    # SPY trailing 24-month return < 0 ...
+PANIC_VOL_WINDOW   = 63     # ... AND SPY 63d realized vol ...
+PANIC_VOL_QWINDOW  = 756    # ... above its trailing-3yr ...
+PANIC_VOL_QUANTILE = 0.80   # ... 80th percentile
 
 # ── Locked parameters per book ──────────────────────────────────────
 PARAMS = {
@@ -73,10 +97,15 @@ PARAMS = {
         tc_per_cycle=0.010,                 # 0.5% round-trip per 40-day cycle
         lev_cost_ann=0.10,
     ),
-    # B: QQQ bubble triggers top-5 momentum stock buys
+    # B: QQQ bubble — direct QQQ trade (long-only, mean reversion)
+    # Backtested 6yr (2020-2026): MA=200h, Z=100h, buy<-0.8, hold=24h
+    # NOTE: live engine (settle.py/plan.py/live_book.py) still uses old
+    #       "QQQ bubble -> momentum stocks" logic and needs a full rewrite
+    #       to match the backtested strategy (direct QQQ trades, 2-window bubble).
     "B": dict(
-        qqq_bubble_ma_hours=500, threshold=-0.8,
-        mom_lookback_hours=40, hold_hours=52, top_n=5,
+        qqq_bubble_ma_hours=200, z_window_hours=100, threshold=-0.8,
+        hold_hours=24, top_n=5,        # top_n unused in new strategy; kept for live compat
+        mom_lookback_hours=40,         # unused in new strategy; kept for live compat
         tc_one_way=TC_ONE_WAY,
     ),
     # C: Intraday mean-reversion + momentum flip
@@ -88,7 +117,16 @@ PARAMS = {
     # D: Contrarian bubble — buy deeply depressed stocks
     "D": dict(
         bubble_ma_hours=104, threshold=-0.8,
-        hold_hours=13, top_n=20,
+        hold_hours=8, top_n=20,
+        tc_one_way=TC_ONE_WAY,
+    ),
+    # F: Universe Hourly Momentum Long — top-5 by 750h (~107d) return, hold 200h (~29d)
+    # Non-overlapping rebalance. No leverage, no shorts.
+    # Backtest 2019-2026: Sharpe 1.642, CAGR 78.8%, MaxDD -39.6%, 74/216 combos > 1.0
+    "F": dict(
+        lookback_hours=750,   # 750h / 7 bars/day = 107 trading days (~5 months)
+        hold_hours=200,       # 200h / 7 bars/day =  29 trading days (~6 weeks)
+        top_n=5,
         tc_one_way=TC_ONE_WAY,
     ),
     # E: Reddit sentiment long-only — buy capitulation + moderate hype (no shorts)
@@ -132,7 +170,7 @@ MOM_ALLOC_MIN_DAYS = 10     # fall back to equal-weight until this much history 
 RISK_FREE_ANN = 0.02
 
 # ── Broker / live execution (Alpaca paper) ──────────────────────────
-LIVE_BOOK     = "MomAlloc"        # which book the Alpaca account mirrors
+LIVE_BOOK     = "IvolVT"          # which book the Alpaca account mirrors (champion, 2026-08-15)
 DRY_RUN       = True              # default: log orders, never submit (also needs --live)
 GROSS_CAP     = 1.0               # max gross exposure as a fraction of account equity
 MIN_ORDER_USD = 50.0              # skip reconciling deltas below this notional

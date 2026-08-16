@@ -32,7 +32,8 @@ best_ret, best_params, grid_df = run_universe_bubble_hourly(
     hourly_close = hc,
     ma_window_grid   = [20, 50, 100],
     z_window_grid    = [50, 100, 200],
-    threshold_grid   = [0.5, 0.6, 0.7, 0.8, 0.9],
+    buy_threshold_grid   = [0.5, 0.6, 0.7, 0.8, 0.9],
+    short_threshold_grid = [0.85, 0.9, 0.92, 0.95, 0.97],
     hold_hours_grid  = [1, 2, 4, 8],
     top_n_grid       = [5, 10, 20],
     transaction_cost  = 0.001,
@@ -42,7 +43,7 @@ best_ret, best_params, grid_df = run_universe_bubble_hourly(
 # ── Results ────────────────────────────────────────────────────────────────
 S = "=" * 75
 print(f"\n{S}\nTOP 20 COMBOS (by Sharpe)\n{S}")
-cols = ["ma_window","z_window","threshold","hold_hours","top_n",
+cols = ["ma_window","z_window","buy_threshold","short_threshold","hold_hours","top_n",
         "Sharpe","Sortino","Total_Return","Max_DD","n_trades","Win_Rate"]
 print(grid_df[cols].head(20).to_string(index=False))
 

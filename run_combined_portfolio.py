@@ -97,7 +97,8 @@ def _print_header(title: str):
 QQQ_PARAMS = dict(
     ma_window_grid   = [100],
     z_window_grid    = [200],
-    threshold_grid   = [0.9],
+    buy_threshold_grid   = [0.9],
+    short_threshold_grid = [0.95],
     hold_hours_grid  = [4],
     transaction_cost = 0.001,
     short_borrow_rate= 0.08,

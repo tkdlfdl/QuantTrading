@@ -286,18 +286,74 @@ def replay_E(panels):
 
 
 # ─────────────────────────────────────────────────────────────────────
+# BOOK F — Universe Hourly Momentum Long (lb=750h, hold=200h, top=5)
+# ─────────────────────────────────────────────────────────────────────
+def replay_F(panels):
+    """
+    Non-overlapping hourly cross-sectional momentum.
+    Signal: top-5 stocks by 750h cumulative return (107 trading days, ~5 months).
+    Hold:   200h (29 trading days, ~6 weeks). Rebalance only after hold closes.
+    """
+    p = C.PARAMS["F"]
+    hc, ho, idx = panels["hourly_close"], panels["hourly_open"], panels["idx_h"]
+    tickers = panels["tickers"]
+    prices = hc.values.astype(np.float64)
+    opens  = ho.values.astype(np.float64)
+    U = len(tickers); T = len(idx)
+
+    mom = S.momentum_hours(hc, p["lookback_hours"]).values   # [T x U]
+    tdays, bdi, day_last, day_first, dret = _daily_infra(idx, prices)
+
+    warmup = p["lookback_hours"] + 1
+    hold_h = p["hold_hours"]
+    top_n  = p["top_n"]
+    trades, open_positions, closed = [], [], []
+    last_bar = T - 1
+
+    i = warmup
+    while i + hold_h < T:
+        row   = mom[i]
+        valid = np.where(np.isfinite(row) & (row != 0))[0]
+        if len(valid) >= top_n:
+            chosen = valid[np.argpartition(row[valid], -top_n)[-top_n:]]
+            eb = i + 1
+            xb = min(i + hold_h, last_bar)
+            trades.append((eb, xb, list(chosen), +1))
+            for s in chosen:
+                rec = dict(book="F", ticker=tickers[s], side=1,
+                           entry_ts=str(idx[eb]), exit_ts=str(idx[xb]),
+                           entry_px=float(opens[eb, s]), exit_px=float(prices[xb, s]))
+                if xb >= last_bar:
+                    open_positions.append(rec)
+                else:
+                    rec["ret"] = (rec["exit_px"] / rec["entry_px"] - 1
+                                  if rec["entry_px"] > 0 else 0.0)
+                    closed.append(rec)
+        i += hold_h   # non-overlapping: step by full hold period
+
+    tc_rt = 2 * p["tc_one_way"]
+    port = E.equal_weight_daily_pnl(trades, prices, opens, idx, day_last, day_first,
+                                    bdi, dret, U, tc_rt, hold_h)
+    ser = pd.Series(port, index=pd.to_datetime(tdays))
+    return ser, open_positions, closed
+
+
+# ─────────────────────────────────────────────────────────────────────
 # REPLAY ALL BOOKS
 # ─────────────────────────────────────────────────────────────────────
 def replay_all(panels):
-    rA, _, _   = replay_A(panels)
+    rA, _, _      = replay_A(panels)
     rB, posB, clB = replay_B(panels)
-    rC, _, _   = replay_C(panels)
+    rC, _, _      = replay_C(panels)
     rD, posD, clD = replay_D(panels)
-    rE, _, _   = replay_E(panels)
+    rE, _, _      = replay_E(panels)
+    rF, posF, clF = replay_F(panels)
 
-    book_rets = pd.DataFrame({"A": rA, "B": rB, "C": rC, "D": rD, "E": rE}).sort_index()
-    positions = {"A": [], "B": posB, "C": [], "D": posD, "E": []}
-    closed = clB + clD
+    book_rets = pd.DataFrame(
+        {"A": rA, "B": rB, "C": rC, "D": rD, "E": rE, "F": rF}
+    ).sort_index()
+    positions = {"A": [], "B": posB, "C": [], "D": posD, "E": [], "F": posF}
+    closed = clB + clD + clF
     trades_df = pd.DataFrame(closed) if closed else pd.DataFrame(
         columns=["book", "ticker", "side", "entry_ts", "exit_ts", "entry_px", "exit_px", "ret"])
     return book_rets, positions, trades_df

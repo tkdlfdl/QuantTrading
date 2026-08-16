@@ -1,0 +1,101 @@
+# Paper Registry — read tracking & verdicts
+
+**Rules:**
+1. Every paper reviewed for this project gets exactly one row. **Check this
+   file before reading any paper.** Re-reading a listed paper is allowed but
+   LOW priority — unread new papers come first; re-read only with a reason
+   (new synthesis angle, changed data, evidence contradicting the verdict).
+   On re-read, update the row (new date + revised verdict) instead of adding
+   a duplicate.
+2. `Verdict` values:
+   - **IMPROVED** ⭐ — implemented here and beat the relevant baseline (higher
+     Sharpe or return with comparable MaxDD). The implementation and recorded
+     series are named in Notes.
+   - `tested-no-gain` — implemented, did not improve.
+   - `rejected` — read, not implementable or contradicted by evidence.
+   - `untestable` — needs data we don't have (fundamentals, options, futures...).
+   - `pending` — read and specced, implementation not yet run.
+3. Baselines for "improvement" (2026-08-15 honest retest): Book D 2.740/-6.4%,
+   Book F 1.548/-39.8%, Book A 1.301/-65.4%, FixedEW portfolio 2.060/-19.0%,
+   MomAlloc 1.970/-24.5%. Comparable MaxDD = not more than ~1.2x worse.
+
+| # | Paper (Author, Year, Journal) | Family | Read | Verdict | Notes |
+|---|-------------------------------|--------|------|---------|-------|
+| 1 | Antweiler & Frank (2004), JF | Sentiment | 2026-08-15 | rejected | Message-board sentiment: effect real but economically small vs costs (see reddit-sentiment-ma brief) |
+| 2 | Tetlock (2007), JF | Sentiment | 2026-08-15 | rejected | Media pessimism → short-horizon reversal; contrarian sign contradicts naive long-hype |
+| 3 | Da, Engelberg & Gao (2015), RFS | Sentiment | 2026-08-15 | rejected | FEARS index: 1-2 day reversal only; sub-cost magnitude at our frequency |
+| 4 | Heston & Sinha (2017), FAJ | Sentiment | 2026-08-15 | tested-no-gain | Weekly-smoothed sentiment horizon extension — motivated the MA variants (best 1.13, still beta not alpha) |
+| 5 | Bradley et al. (2024), RFS | Sentiment/Reddit | 2026-08-15 | rejected | WSB Due-Diligence predictability eliminated post-GameStop; kills naive Reddit strategies |
+| 6 | Reichenbach & Walther (2023) | Sentiment/Reddit | 2026-08-15 | rejected | Reddit portfolios: negative 1yr alpha |
+| 7 | Kim & Kim (2014) | Sentiment | 2026-08-15 | rejected | Null on 32M messages; sentiment follows prices — confirmed by our 0.87 variant correlations |
+| 8 | Lachanski & Pav (2017) | Sentiment | 2026-08-15 | rejected | Bollen Twitter-mood is data snooping; fund closed <1yr |
+| 9 | Bollen, Mao & Zeng (2011) | Sentiment | 2026-08-15 | rejected | Famous Twitter-mood result; failed replication (see #8) |
+| 10 | Moreira & Muir (2017), JF | Construction/vol-managed | 2026-08-15 | **IMPROVED** ⭐ | Vol-target overlay on portfolio: `portfolio_ivol_voltgt_nob` Sharpe **2.501/-8.9%** vs EW 2.06/-19.0%; also `portfolio_ew_voltgt_*` |
+| 11 | Harvey, Hoyle, Korgaonkar et al. (2018), JPM | Construction/vol-targeting | 2026-08-15 | **IMPROVED** ⭐ | Same overlay evidence — vol targeting works on equity-like risk assets; confirmed on our books |
+| 12 | Barroso & Santa-Clara (2015), JFE | Momentum crash fix | 2026-08-15 | **IMPROVED** ⭐ | Risk-managed momentum on Book F: `book_f_riskmanaged` Sharpe 1.609/-10.3% vs 1.548/-39.8% (CAGR falls 76%→18%; best used at portfolio level) |
+| 13 | Qian (2005), PanAgora wp | Construction/risk parity | 2026-08-15 | tested-no-gain | Plain inverse-vol: CAGR ↑ (59-75%) but MaxDD -28% breaches bar; needs the vol overlay (see #10) to shine |
+| 14 | Maillard, Roncalli & Teiletche (2010) | Construction/ERC | 2026-08-15 | tested-no-gain | ERC: MaxDD -13.7% best-in-class but Sharpe 1.57 ≪ EW 2.06 — over-allocates to low-vol low-return books |
+| 15 | López de Prado (2016), JPM | Construction/HRP | 2026-08-15 | tested-no-gain | HRP: 1.82-1.94 Sharpe, good DD, but loses to plain EW on 5 assets — clustering adds nothing at N=5 |
+| 16 | DeMiguel, Garlappi & Uppal (2009), RFS | Construction/1-N | 2026-08-15 | tested-no-gain | The 1/N null result — validates our Fixed-EW baseline; optimized weights indeed failed to beat it here (ERC, HRP, sharpe_w all lost) |
+| 17 | Kelly (1956); MacLean, Thorp & Ziemba (2011) | Construction/Kelly | 2026-08-15 | **IMPROVED** ⭐ | Quarter-Kelly + shrinkage, no-B: `portfolio_qkelly_nob` Sharpe 2.098/-19.8% vs 2.013/-21.6% — marginal; dominated by #10 |
+| 18 | Ledoit & Wolf (2004), JPM/JMA | Construction/shrinkage | 2026-08-15 | tested-no-gain | Covariance shrinkage used inside quarter-Kelly; enabler, not standalone improver |
+| 19 | Markowitz (1952), JF | Construction/mean-variance | 2026-08-15 | rejected | Foundational; raw MV needs ~3,000 months of data for N=25 (per #16) — unusable at our N and history |
+| 20 | Clarke, de Silva & Thorley (2006), JPM | Construction/min-var | 2026-08-15 | rejected | Min-var is return-blind; ERC test (#14) shows the failure mode on our books |
+| 21 | Choueifaty & Coignard (2008), JPM | Construction/max-div | 2026-08-15 | rejected | Max diversification return-blind; survey-rejected for our setup |
+| 22 | Black & Litterman (1992), FAJ | Construction/Bayesian | 2026-08-15 | untestable | Needs subjective views + market-cap prior; no natural prior for strategy books |
+| 23 | Asness, Frazzini & Pedersen (2012), FAJ | Construction/risk parity | 2026-08-15 | tested-no-gain | Leverage-aversion case for risk parity; we run unlevered so the mechanism (levering low-vol) is unavailable |
+| 24 | Faber (2007), JWM | Construction/trend TAA | 2026-08-15 | tested-no-gain | Gate on A/F in champion: 2.566 ≈ 2.580 — 210d returns nearly always positive 2019-2026, gate rarely fires |
+| 25 | Donohue & Yip (2003), JPM | Construction/rebalancing | 2026-08-15 | rejected | Rebalancing-frequency effects; our 21d choice is within their no-harm range |
+| 26 | Jegadeesh & Titman (1993), JF | Momentum | 2026-08-15 | tested-no-gain | Foundational cross-sectional momentum — already embodied in Books A/F; no new edge beyond current params |
+| 27 | Daniel & Moskowitz (2016), JFE | Momentum crashes | 2026-08-15 | **IMPROVED** ⭐ (marginal) | Panic gate on champion: `portfolio_champ_panic_nob` 2.514/-8.9% vs 2.501 — only 11 panic days in window, mechanism barely exercised; keep as insurance |
+| 28 | Nagel (2012), RFS | Reversal/liquidity | 2026-08-15 | tested-no-gain | VIX-scaling Book D: 2.479 < champion 2.501 — D already self-loads in high-VIX periods via signal frequency |
+| 29 | Moskowitz, Ooi & Pedersen (2012), JFE | TS momentum | 2026-08-15 | tested-no-gain | Same test as #24 (own-trend gate) — wash in champion |
+| 30 | De Bondt & Thaler (1985), JF | LT reversal | 2026-08-15 | rejected | 3-5yr reversal horizon too slow for our stack; decayed post-publication (per #35 haircut) |
+| 31 | George & Hwang (2004), JF | 52-wk-high momentum | 2026-08-15 | tested-no-gain | STRONG negative: ranking swap gives Sharpe -0.01 vs 1.548 — near-high names are the OPPOSITE of F's explosive-mover edge on this universe/period |
+| 32 | Gatev, Goetzmann & Rouwenhorst (2006), RFS | Pairs trading | 2026-08-15 | rejected | Profits decayed to ~0 post-2002 in follow-ups; high infra cost |
+| 33 | Lou, Polk & Skouras (2019), JFE | Overnight/intraday | 2026-08-15 | tested-no-gain | Re-timed entries/exits: 1.424 vs 1.548 — overnight alignment diluted at 200h holds, as the sweep predicted |
+| 34 | Medhat & Schmeling (2022), RFS | ST momentum/turnover | 2026-08-15 | tested-no-gain | 28yr test: 0.753/-56.9% vs control 0.695/-72.2% — condition effect +0.06 real but small; corr 0.55 to F; fails new-book bar. Caveat: volume-intensity proxy, not true share turnover |
+| 35 | McLean & Pontiff (2016), JF | Meta/decay | 2026-08-15 | rejected | 26% in-sample→58% post-publication decay haircut — applied as prior to all candidates, not a strategy itself |
+| 36 | Gervais, Kaniel & Mingelgrin (2001), JF | Volume premium | 2026-08-15 | pending | High-volume premium as Book D eligibility filter — untested |
+| 37 | Amihud (2002), JFM | Illiquidity | 2026-08-15 | rejected | Illiquidity premium lives in small caps outside our S&P500/NDX universe |
+| 38 | Heston & Sadka (2008), JFE | Seasonality | 2026-08-15 | rejected | Same-calendar-month momentum: weak post-publication, monthly horizon poor fit |
+| 39 | Ariel (1987); Lakonishok & Smidt (1988), JF | Turn-of-month | 2026-08-15 | rejected | TOM effect too small after costs at our position sizes; decayed |
+| 40 | Cederburg, O'Doherty, Wang & Yan (2020), JFE | Vol-managed critique | 2026-08-15 | tested-no-gain | Caveat on #10: vol-managed fails OOS for many factors — our direct comparison passed (2.501 vs 2.06), which is the test they demand |
+| 41 | (original — verifier finding, Cycle 1) | Original/risk fix | 2026-08-15 | **IMPROVED** ⭐ | Book C per-ticker overlap cap: C Sharpe 0.592→0.675, MaxDD -53.7%→-33.0%; champion 2.514→2.580 at same DD. Origin class 4 (own-system observation, no paper) |
+| 42 | Shu, Yu & Mulvey (2024), J. Asset Mgmt | Regime/jump models | 2026-08-15 | tested-no-gain | JM gate: champ 2.498 < 2.580 (DM gate). 300 bear days = too trigger-happy vs DM's 11; de-risks rallies |
+| 43 | Garg, Goulding, Harvey & Mazzoleni (2023), JFE | Momentum turning points | 2026-08-15 | tested-no-gain | F standalone MaxDD -39.8→-33.5% at same Sharpe, but champion 2.576/-8.5 ≈ 2.580/-8.9 — ivol+VT already absorbs F's DD |
+| 44 | Wood, Roberts & Zohren (2022), JFDS | Momentum/ML CPD | 2026-08-15 | tested-no-gain | Fed Idea 2 (see #43) — wash at champion level |
+| 45 | Heston, Korajczyk & Sadka (2010), JF | Intraday seasonality | 2026-08-15 | tested-no-gain | D hold grid 7/14/21h all < locked 8h (2.74). Note: 14h/21h raise total return (+872%/+910% vs +640%) at ~2x DD — possible future high-return variant |
+| 46 | Gao, Han, Li & Zhou (2018), JFE | Intraday momentum | 2026-08-15 | tested-no-gain | SPY hourly ingested (92.3% coverage): Sharpe -9.5 — last-hour edge < our 0.2% round-trip cost; effect dead at retail cost tier |
+| 47 | Bun, Bouchaud & Potters (2017), Phys. Reports | Covariance/RMT | 2026-08-15 | tested-no-gain | Residual bubble for D (official engine, sane anchor): alpha=0.5 Sharpe 2.178, alpha=1.0 1.362 vs raw 2.740 — market-mode component IS part of D's edge |
+| 48 | Guijarro-Ordonez, Pelger & Zanotti (2021+), arXiv/SSRN | ML/statarb | 2026-08-15 | tested-no-gain | See #47 — residualization degrades D; oversold-with-the-market bounces harder than idiosyncratically-oversold |
+| 49 | Ledoit & Wolf (2020), Ann. Statist. | Covariance/NLS | 2026-08-15 | untestable | Nonlinear shrinkage — shelf tool for future large-N book; see #50 caution |
+| 50 | Bongiorno & Challet (2021/2023), arXiv | Covariance | 2026-08-15 | rejected | NLS suboptimal under non-stationarity; Average Oracle; author order on 2309.17219 to double-check |
+| 51 | Mhammedi & Rakhlin (2022), COLT | Online learning | 2026-08-15 | tested-no-gain | EG+VT 2.151/-13.1% — respectable with zero tuning but loses to ivol champion 2.580/-8.9% |
+| 52 | Lim, Zohren & Roberts (2019), JFDS | Momentum/ML | 2026-08-15 | rejected | Deep momentum networks need 2-3bp costs, ours 10-25bp; keep Sharpe-loss framing |
+| 53 | Gu, Kelly & Xiu (2020), RFS | Cross-section/ML | 2026-08-15 | pending | Price-feature-only GBT as possible Book G — quarter-scale effort, deferred |
+| 54 | Ryan (2026), arXiv:2608.01494 | Sizing/conformal | 2026-08-15 | rejected | Conformal Kelly failed its own pre-registered OOS; conformal-width throttle = open question |
+| 55 | Wisniewski, Lindsay & Lindsay (2020), COPA | Conformal | 2026-08-15 | rejected | FX market-maker inventory domain — not transferable |
+| 56 | Scheffer et al. (2009), Nature | Econophysics/EWS | 2026-08-15 | rejected | Context only for early-warning thread — killed by #57 |
+| 57 | Guttal et al. (2016), PLOS ONE | Econophysics/EWS | 2026-08-15 | rejected | Valuable negative: no critical-slowing-down before financial crashes — kills CSD drawdown pre-alarm idea |
+| 58 | Sornette LPPLS corpus (Bree-Joseph 2013; Shu 2024) | Econophysics/bubbles | 2026-08-15 | rejected | Fit fragility, mixed OOS — no LPPLS timing overlay |
+| 59 | HMM regime literature (incl. arXiv:2406.09578) | Regime | 2026-08-15 | rejected | Superseded by jump models (#42) for our use |
+| 60 | Corsi (2009), J. Fin. Econometrics | Vol forecasting/HAR | 2026-08-15 | pending | HAR-RV — queue #11: overlay vol-estimator swap (top priority: biggest lever) |
+| 61 | Andersen, Bollerslev, Diebold & Labys (2003), Econometrica | Vol forecasting/RV | 2026-08-15 | pending | log-RV foundations — enabler of #11 |
+| 62 | Bollerslev, Patton & Quaedvlieg (2016), J. Econometrics | Vol forecasting/HARQ | 2026-08-15 | pending | HARQ variant of #11 |
+| 63 | Patton & Sheppard (2015), REStat | Vol forecasting/semivariance | 2026-08-15 | pending | Semivariance HAR variant of #11 |
+| 64 | Corsi & Renò (2012), JBES | Vol forecasting/leverage | 2026-08-15 | pending | Leverage HAR variant of #11 |
+| 65 | Yang & Zhang (2000), J. Business | Vol estimation/range | 2026-08-15 | pending | Range-based RV proxy; component of #15 committee |
+| 66 | Gatheral, Jaisson & Rosenbaum (2018), Quant. Fin. | Vol/rough | 2026-08-15 | rejected | Rough vol validates HAR at our horizons; RFSV effort not justified |
+| 67 | Ghashghaie et al. (1996), Nature | Econophysics/cascade | 2026-08-15 | rejected | Conceptual ancestor of HAR only |
+| 68 | Preis, Kenett, Stanley, Helbing & Ben-Jacob (2012), Sci. Rep. | Correlation dynamics | 2026-08-15 | pending | Mean-correlation spike fragility gate — queue #13 |
+| 69 | Onnela et al. (2003), Phys. Rev. E | Correlation/MST | 2026-08-15 | rejected | Corroborates #68; MST machinery unnecessary |
+| 70 | Munnix et al. (2012), Sci. Rep. | Correlation states | 2026-08-15 | rejected | Heavier cousin of #68 scalars; deferred |
+| 71 | Kritzman, Li, Page & Rigobon (2011), JPM | Absorption ratio | 2026-08-15 | pending | Trading-rule form of #13 (practitioner-journal caution) |
+| 72 | Curme et al. (2015), Quant. Fin. | Lead-lag networks | 2026-08-15 | rejected | Needs <=15-min sampling; decayed post-2011 |
+| 73 | Huth & Abergel (2014), J. Emp. Fin. | Lead-lag/HF | 2026-08-15 | rejected | Seconds-scale, tick data required |
+| 74 | Chekhlov, Uryasev & Zabarankin (2005), IJTAF | OR/CDaR | 2026-08-15 | pending | Drawdown-constrained LP allocator — queue #14 |
+| 75 | Goldberg & Mahmoud (2017), Math. Fin. Econ. | OR/drawdown theory | 2026-08-15 | pending | CED loads on loss autocorrelation — mechanism for #14 |
+| 76 | Hamilton (1989), Econometrica | Regime switching | 2026-08-15 | rejected | Regime-gate slot resolved (#42, #27); do not rebuild |
+| 77 | Bates & Granger (1969), ORQ | Forecast combination | 2026-08-15 | pending | Inverse-QLIKE vol-forecast committee — queue #15 |
+| 78 | Stivers & Sun (2010), JFQA | Dispersion/momentum | 2026-08-15 | pending | Dispersion throttle on A/F — queue #12 (1997-2018 pre-test first) |

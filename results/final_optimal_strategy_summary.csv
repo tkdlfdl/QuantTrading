@@ -1,0 +1,2 @@
+Strategy,Bubble_Indicator,MA_Window,Z_Window,Hedge_Entry,Hedge_Allocation,Hedge_Hold_Days,Leverage_Entry,Leverage_Multiplier,Leverage_Hold_Days,Total_Return,Annual_Return,Sharpe_Ratio,Sortino_Ratio,Max_Drawdown,Annual_Volatility,Final_Wealth,Positive_Years
+Daily Momentum + Low Bubble Leverage + High Bubble UVXY,Momentum,120,240,0.85,0.5,40,-0.88,1.25,50,150419609.74%,62.17%,1.462338,34.719943,-65.28%,42.51%,1504197x,24/30

@@ -1,0 +1,4 @@
+Strategy,Total Return,Annual Return,Sharpe Ratio,Max Drawdown,Win Rate
+Market Bubble + Buy Mom,-88.75%,-25.52%,-4.7755,-88.79%,4.8%
+Hourly Momentum (LongShort),-99.83%,-57.85%,-15.7712,-99.83%,20.1%
+Daily Mean Reversion,-69.15%,-14.67%,-12.2288,-69.15%,0.7%

@@ -1,0 +1,112 @@
+timestamp,name,check,verdict,detail
+2026-08-16T00:41:30+00:00,book_a_retest,C1-sign,PASS,"Sharpe 1.30, total 65237203.45% — signs consistent"
+2026-08-16T00:41:30+00:00,book_a_retest,C2-maxdd,PASS,MaxDD -65.39% over 7284 days
+2026-08-16T00:41:30+00:00,book_a_retest,C3-metrics,PASS,recomputed metrics match history.json
+2026-08-16T00:41:30+00:00,book_a_retest,C4-integrity,PASS,"n=7284, zero-days 0%, max |ret| 28.0%"
+2026-08-16T00:41:30+00:00,book_a_retest,OVERALL,PASS,4/3 checks clean
+2026-08-16T00:41:30+00:00,book_b_retest,C1-sign,PASS,"Sharpe 0.77, total 52.48% — signs consistent"
+2026-08-16T00:41:30+00:00,book_b_retest,C2-maxdd,PASS,MaxDD -8.76% over 1481 days
+2026-08-16T00:41:30+00:00,book_b_retest,C3-metrics,PASS,recomputed metrics match history.json
+2026-08-16T00:41:30+00:00,book_b_retest,C4-integrity,PASS,"n=1481, zero-days 78%, max |ret| 6.6%"
+2026-08-16T00:41:30+00:00,book_b_retest,OVERALL,PASS,4/3 checks clean
+2026-08-16T00:41:30+00:00,book_c_retest,C1-sign,PASS,"Sharpe 0.59, total 249.22% — signs consistent"
+2026-08-16T00:41:30+00:00,book_c_retest,C2-maxdd,PASS,MaxDD -53.69% over 1653 days
+2026-08-16T00:41:30+00:00,book_c_retest,C3-metrics,PASS,recomputed metrics match history.json
+2026-08-16T00:41:30+00:00,book_c_retest,C4-integrity,FAIL,extreme daily return 93.0% (>50%)
+2026-08-16T00:41:30+00:00,book_c_retest,OVERALL,FAIL,3/3 checks clean
+2026-08-16T00:41:30+00:00,book_d_retest,C1-sign,PASS,"Sharpe 2.74, total 639.62% — signs consistent"
+2026-08-16T00:41:30+00:00,book_d_retest,C2-maxdd,PASS,MaxDD -6.41% over 1674 days
+2026-08-16T00:41:30+00:00,book_d_retest,C3-metrics,PASS,recomputed metrics match history.json
+2026-08-16T00:41:30+00:00,book_d_retest,C4-integrity,PASS,"n=1674, zero-days 11%, max |ret| 4.4%"
+2026-08-16T00:41:30+00:00,book_d_retest,OVERALL,PASS,4/3 checks clean
+2026-08-16T00:41:30+00:00,book_e_locked_params_full_history,C1-sign,PASS,"Sharpe 0.62, total 142.18% — signs consistent"
+2026-08-16T00:41:30+00:00,book_e_locked_params_full_history,C2-maxdd,PASS,MaxDD -43.68% over 1872 days
+2026-08-16T00:41:30+00:00,book_e_locked_params_full_history,C3-metrics,PASS,recomputed metrics match history.json
+2026-08-16T00:41:30+00:00,book_e_locked_params_full_history,C4-integrity,PASS,"n=1872, zero-days 3%, max |ret| 13.4%"
+2026-08-16T00:41:30+00:00,book_e_locked_params_full_history,OVERALL,PASS,4/3 checks clean
+2026-08-16T00:41:30+00:00,book_e_reddit_capitulation,C1-sign,PASS,"Sharpe 0.92, total 283.90% — signs consistent"
+2026-08-16T00:41:30+00:00,book_e_reddit_capitulation,C2-maxdd,PASS,MaxDD -38.95% over 1820 days
+2026-08-16T00:41:30+00:00,book_e_reddit_capitulation,C3-metrics,PASS,recomputed metrics match history.json
+2026-08-16T00:41:30+00:00,book_e_reddit_capitulation,C4-integrity,PASS,"n=1820, zero-days 12%, max |ret| 12.7%"
+2026-08-16T00:41:30+00:00,book_e_reddit_capitulation,OVERALL,PASS,4/3 checks clean
+2026-08-16T00:41:30+00:00,book_e_reddit_sentiment_ma_contrarian,C1-sign,PASS,"Sharpe 0.98, total 321.85% — signs consistent"
+2026-08-16T00:41:30+00:00,book_e_reddit_sentiment_ma_contrarian,C2-maxdd,PASS,MaxDD -31.12% over 1840 days
+2026-08-16T00:41:30+00:00,book_e_reddit_sentiment_ma_contrarian,C3-metrics,PASS,recomputed metrics match history.json
+2026-08-16T00:41:30+00:00,book_e_reddit_sentiment_ma_contrarian,C4-integrity,PASS,"n=1840, zero-days 11%, max |ret| 13.3%"
+2026-08-16T00:41:30+00:00,book_e_reddit_sentiment_ma_contrarian,OVERALL,PASS,4/3 checks clean
+2026-08-16T00:41:30+00:00,book_e_reddit_sentiment_ma_momentum,C1-sign,PASS,"Sharpe 1.13, total 455.17% — signs consistent"
+2026-08-16T00:41:30+00:00,book_e_reddit_sentiment_ma_momentum,C2-maxdd,PASS,MaxDD -37.31% over 1840 days
+2026-08-16T00:41:30+00:00,book_e_reddit_sentiment_ma_momentum,C3-metrics,PASS,recomputed metrics match history.json
+2026-08-16T00:41:30+00:00,book_e_reddit_sentiment_ma_momentum,C4-integrity,PASS,"n=1840, zero-days 9%, max |ret| 12.3%"
+2026-08-16T00:41:30+00:00,book_e_reddit_sentiment_ma_momentum,OVERALL,PASS,4/3 checks clean
+2026-08-16T00:41:30+00:00,book_f_retest,C1-sign,PASS,"Sharpe 1.55, total 4121.39% — signs consistent"
+2026-08-16T00:41:30+00:00,book_f_retest,C2-maxdd,PASS,MaxDD -39.76% over 1674 days
+2026-08-16T00:41:30+00:00,book_f_retest,C3-metrics,PASS,recomputed metrics match history.json
+2026-08-16T00:41:30+00:00,book_f_retest,C4-integrity,PASS,"n=1674, zero-days 18%, max |ret| 17.9%"
+2026-08-16T00:41:30+00:00,book_f_retest,OVERALL,PASS,4/3 checks clean
+2026-08-16T00:41:30+00:00,book_f_riskmanaged,C1-sign,PASS,"Sharpe 1.61, total 207.88% — signs consistent"
+2026-08-16T00:41:30+00:00,book_f_riskmanaged,C2-maxdd,PASS,MaxDD -10.32% over 1674 days
+2026-08-16T00:41:30+00:00,book_f_riskmanaged,C3-metrics,PASS,recomputed metrics match history.json
+2026-08-16T00:41:30+00:00,book_f_riskmanaged,C4-integrity,PASS,"n=1674, zero-days 18%, max |ret| 4.3%"
+2026-08-16T00:41:30+00:00,book_f_riskmanaged,OVERALL,PASS,4/3 checks clean
+2026-08-16T00:41:30+00:00,portfolio_champ_both_nob,C1-sign,PASS,"Sharpe 2.50, total 1567.81% — signs consistent"
+2026-08-16T00:41:30+00:00,portfolio_champ_both_nob,C2-maxdd,PASS,MaxDD -9.33% over 1889 days
+2026-08-16T00:41:30+00:00,portfolio_champ_both_nob,C3-metrics,PASS,recomputed metrics match history.json
+2026-08-16T00:41:30+00:00,portfolio_champ_both_nob,C4-integrity,PASS,"n=1889, zero-days 0%, max |ret| 16.6%"
+2026-08-16T00:41:30+00:00,portfolio_champ_both_nob,OVERALL,PASS,4/3 checks clean
+2026-08-16T00:41:30+00:00,portfolio_champ_panic_nob,C1-sign,PASS,"Sharpe 2.51, total 1545.23% — signs consistent"
+2026-08-16T00:41:30+00:00,portfolio_champ_panic_nob,C2-maxdd,PASS,MaxDD -8.88% over 1889 days
+2026-08-16T00:41:30+00:00,portfolio_champ_panic_nob,C3-metrics,PASS,recomputed metrics match history.json
+2026-08-16T00:41:30+00:00,portfolio_champ_panic_nob,C4-integrity,PASS,"n=1889, zero-days 0%, max |ret| 15.8%"
+2026-08-16T00:41:30+00:00,portfolio_champ_panic_nob,OVERALL,PASS,4/3 checks clean
+2026-08-16T00:41:30+00:00,portfolio_ew_voltgt_all,C1-sign,PASS,"Sharpe 2.21, total 976.98% — signs consistent"
+2026-08-16T00:41:30+00:00,portfolio_ew_voltgt_all,C2-maxdd,PASS,MaxDD -11.45% over 1889 days
+2026-08-16T00:41:30+00:00,portfolio_ew_voltgt_all,C3-metrics,PASS,recomputed metrics match history.json
+2026-08-16T00:41:30+00:00,portfolio_ew_voltgt_all,C4-integrity,PASS,"n=1889, zero-days 0%, max |ret| 11.7%"
+2026-08-16T00:41:30+00:00,portfolio_ew_voltgt_all,OVERALL,PASS,4/3 checks clean
+2026-08-16T00:41:30+00:00,portfolio_ew_voltgt_nob,C1-sign,PASS,"Sharpe 2.15, total 1096.86% — signs consistent"
+2026-08-16T00:41:30+00:00,portfolio_ew_voltgt_nob,C2-maxdd,PASS,MaxDD -13.22% over 1889 days
+2026-08-16T00:41:30+00:00,portfolio_ew_voltgt_nob,C3-metrics,PASS,recomputed metrics match history.json
+2026-08-16T00:41:30+00:00,portfolio_ew_voltgt_nob,C4-integrity,PASS,"n=1889, zero-days 0%, max |ret| 14.7%"
+2026-08-16T00:41:30+00:00,portfolio_ew_voltgt_nob,OVERALL,PASS,4/3 checks clean
+2026-08-16T00:41:30+00:00,portfolio_fixed_ew_honest,C1-sign,PASS,"Sharpe 2.06, total 1787.89% — signs consistent"
+2026-08-16T00:41:30+00:00,portfolio_fixed_ew_honest,C2-maxdd,PASS,MaxDD -18.98% over 1889 days
+2026-08-16T00:41:30+00:00,portfolio_fixed_ew_honest,C3-metrics,PASS,recomputed metrics match history.json
+2026-08-16T00:41:30+00:00,portfolio_fixed_ew_honest,C4-integrity,PASS,"n=1889, zero-days 0%, max |ret| 19.3%"
+2026-08-16T00:41:30+00:00,portfolio_fixed_ew_honest,OVERALL,PASS,4/3 checks clean
+2026-08-16T00:41:30+00:00,portfolio_ivol_voltgt_all,C1-sign,PASS,"Sharpe 2.42, total 883.33% — signs consistent"
+2026-08-16T00:41:30+00:00,portfolio_ivol_voltgt_all,C2-maxdd,PASS,MaxDD -9.60% over 1889 days
+2026-08-16T00:41:30+00:00,portfolio_ivol_voltgt_all,C3-metrics,PASS,recomputed metrics match history.json
+2026-08-16T00:41:30+00:00,portfolio_ivol_voltgt_all,C4-integrity,PASS,"n=1889, zero-days 0%, max |ret| 10.1%"
+2026-08-16T00:41:30+00:00,portfolio_ivol_voltgt_all,OVERALL,PASS,4/3 checks clean
+2026-08-16T00:41:30+00:00,portfolio_ivol_voltgt_nob,C1-sign,PASS,"Sharpe 2.50, total 1533.54% — signs consistent"
+2026-08-16T00:41:30+00:00,portfolio_ivol_voltgt_nob,C2-maxdd,PASS,MaxDD -8.88% over 1889 days
+2026-08-16T00:41:30+00:00,portfolio_ivol_voltgt_nob,C3-metrics,PASS,recomputed metrics match history.json
+2026-08-16T00:41:30+00:00,portfolio_ivol_voltgt_nob,C4-integrity,PASS,"n=1889, zero-days 0%, max |ret| 15.8%"
+2026-08-16T00:41:30+00:00,portfolio_ivol_voltgt_nob,OVERALL,PASS,4/3 checks clean
+2026-08-16T00:41:30+00:00,portfolio_momalloc_honest,C1-sign,PASS,"Sharpe 1.97, total 2556.22% — signs consistent"
+2026-08-16T00:41:30+00:00,portfolio_momalloc_honest,C2-maxdd,PASS,MaxDD -24.46% over 1889 days
+2026-08-16T00:41:30+00:00,portfolio_momalloc_honest,C3-metrics,PASS,recomputed metrics match history.json
+2026-08-16T00:41:30+00:00,portfolio_momalloc_honest,C4-integrity,PASS,"n=1889, zero-days 0%, max |ret| 10.6%"
+2026-08-16T00:41:30+00:00,portfolio_momalloc_honest,OVERALL,PASS,4/3 checks clean
+2026-08-16T00:41:30+00:00,portfolio_qkelly_nob,C1-sign,PASS,"Sharpe 2.10, total 1498.86% — signs consistent"
+2026-08-16T00:41:30+00:00,portfolio_qkelly_nob,C2-maxdd,PASS,MaxDD -19.77% over 1889 days
+2026-08-16T00:41:30+00:00,portfolio_qkelly_nob,C3-metrics,PASS,recomputed metrics match history.json
+2026-08-16T00:41:30+00:00,portfolio_qkelly_nob,C4-integrity,PASS,"n=1889, zero-days 1%, max |ret| 9.8%"
+2026-08-16T00:41:30+00:00,portfolio_qkelly_nob,OVERALL,PASS,4/3 checks clean
+2026-08-16T00:41:30+00:00,universe_bubble_ls_retest,C1-sign,PASS,"Sharpe -0.96, total -77.54% — signs consistent"
+2026-08-16T00:41:30+00:00,universe_bubble_ls_retest,C2-maxdd,PASS,MaxDD -80.18% over 1802 days
+2026-08-16T00:41:30+00:00,universe_bubble_ls_retest,C3-metrics,PASS,recomputed metrics match history.json
+2026-08-16T00:41:30+00:00,universe_bubble_ls_retest,C4-integrity,PASS,"n=1802, zero-days 26%, max |ret| 12.1%"
+2026-08-16T00:41:30+00:00,universe_bubble_ls_retest,OVERALL,PASS,4/3 checks clean
+2026-08-16T00:45:22+00:00,book_c_retest,C4-integrity-RECHECK,FLAG-EXPLAINED,"93%/-54% days on 2021-08-04/05 verified as REAL: HOOD post-IPO squeeze (+50% 8/4, -28% 8/5); 4-sigma signals fired 8/2 AND 8/3, both flip-long HOOD, overlapping trades stack additively (engine-faithful) -> ~2x single-stock exposure. Not a computation bug. RISK DISCLOSURE: Book C concentrates and implicitly levers on single meme stocks; this event IS the -53.7% MaxDD."
+2026-08-16T02:41:22+00:00,book_c_overlap_cap,C1-sign,PASS,"Sharpe 0.68, total 209.26% — signs consistent"
+2026-08-16T02:41:22+00:00,book_c_overlap_cap,C2-maxdd,PASS,MaxDD -32.99% over 1653 days
+2026-08-16T02:41:22+00:00,book_c_overlap_cap,C3-metrics,PASS,recomputed metrics match history.json
+2026-08-16T02:41:22+00:00,book_c_overlap_cap,C4-integrity,PASS,"n=1653, zero-days 75%, max |ret| 37.2%"
+2026-08-16T02:41:22+00:00,book_c_overlap_cap,OVERALL,PASS,4/3 checks clean
+2026-08-16T02:42:12+00:00,portfolio_champion_cappedC,C1-sign,PASS,"Sharpe 2.58, total 1402.42% — signs consistent"
+2026-08-16T02:42:12+00:00,portfolio_champion_cappedC,C2-maxdd,PASS,MaxDD -8.88% over 1889 days
+2026-08-16T02:42:12+00:00,portfolio_champion_cappedC,C3-metrics,PASS,recomputed metrics match history.json
+2026-08-16T02:42:12+00:00,portfolio_champion_cappedC,C4-integrity,PASS,"n=1889, zero-days 0%, max |ret| 8.5%"
+2026-08-16T02:42:12+00:00,portfolio_champion_cappedC,OVERALL,PASS,4/3 checks clean

@@ -115,7 +115,7 @@ def load_alpaca_hourly_bars(
         missing = [t for t in tickers if t not in ho.columns]
         last_ts = ho.index[-1]
         data_age_days = (datetime.now().date() - last_ts.date()).days
-        if not missing and data_age_days < 7:
+        if not missing and data_age_days < 1:
             print(f"Alpaca cache: {len(ho.columns)} tickers (last: {last_ts.date()}).")
             return ho[tickers], hc[tickers]
         print(f"Alpaca cache stale or missing {len(missing)} tickers — re-downloading.")
@@ -161,7 +161,7 @@ def load_hourly_bars(
         missing = [t for t in tickers if t not in yf_ho.columns]
         last_ts = yf_ho.index[-1]
         data_age_days = (datetime.now().date() - last_ts.date()).days
-        if not missing and data_age_days < 7:
+        if not missing and data_age_days < 1:
             print(f"yfinance cache: {len(yf_ho.columns)} tickers (last: {last_ts.date()}).")
         else:
             yf_cached = False
@@ -190,10 +190,29 @@ def load_hourly_bars(
             mc = pd.read_parquet(_MERGED_C_CACHE)
             missing_m = [t for t in tickers if t not in mo.columns]
             age_m = (datetime.now().date() - mo.index[-1].date()).days
-            if not missing_m and age_m < 7:
+            if not missing_m and age_m < 1:
                 print(f"Merged cache: {len(mo.columns)} tickers "
                       f"({mo.index[0].date()} → {mo.index[-1].date()}).")
                 return mo[tickers], mc[tickers]
+            # Merged cache is stale — splice fresh yfinance data into it
+            yf_start = yf_ho.index[0]
+            al_hist_o = mo[mo.index < yf_start]
+            al_hist_c = mc[mc.index < yf_start]
+            if not al_hist_o.empty:
+                # Align columns: keep all yfinance tickers, backfill Alpaca where available
+                all_cols = list(dict.fromkeys(list(yf_ho.columns) + list(al_hist_o.columns)))
+                new_o = pd.concat([al_hist_o.reindex(columns=all_cols),
+                                   yf_ho.reindex(columns=all_cols)]).sort_index()
+                new_c = pd.concat([al_hist_c.reindex(columns=all_cols),
+                                   yf_hc.reindex(columns=all_cols)]).sort_index()
+                new_o = new_o[~new_o.index.duplicated(keep="last")].ffill()
+                new_c = new_c[~new_c.index.duplicated(keep="last")].ffill()
+                new_o.to_parquet(_MERGED_O_CACHE)
+                new_c.to_parquet(_MERGED_C_CACHE)
+                print(f"Updated merged cache: {len(new_o.columns)} tickers "
+                      f"({new_o.index[0].date()} → {new_o.index[-1].date()})")
+                avail = [t for t in tickers if t in new_o.columns]
+                return new_o[avail], new_c[avail]
         avail = [t for t in tickers if t in yf_ho.columns]
         return yf_ho[avail], yf_hc[avail]
 

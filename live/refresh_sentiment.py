@@ -8,9 +8,9 @@ the posts, and re-aggregates into the `sentiment_daily` table so Book E trades o
 current sentiment instead of stale data.
 
 Source preference:
-  1. PRAW (Reddit official API)  — RELIABLE. Needs free Reddit app credentials
+  1. PRAW (Reddit official API)  - RELIABLE. Needs free Reddit app credentials
      (REDDIT_CLIENT_ID / REDDIT_CLIENT_SECRET env, or live/state/reddit_creds.json).
-  2. PullPush (no credentials)   — best-effort fallback; rate-limited & lagged.
+  2. PullPush (no credentials)   - best-effort fallback; rate-limited & lagged.
 
 Usage:
   python -m live.refresh_sentiment
@@ -32,15 +32,15 @@ def main(argv=None):
     universe = get_universe()
     cid, csec = C.load_reddit_creds()
 
-    print(f"Sentiment refresh — {dt.date.today()}")
-    if force == "pullpush" or not (cid and csec):
-        if not (cid and csec) and force != "pullpush":
-            print("  No Reddit API credentials — using PullPush fallback (best-effort).")
-        print("  Source: PullPush")
-        posts = RFS.scan_via_pullpush(universe)
-    else:
+    print(f"Sentiment refresh - {dt.date.today()}")
+    if cid and csec and force != "json":
         print("  Source: PRAW (Reddit official API)")
         posts = RFS.scan_via_praw(universe, cid, csec)
+    else:
+        if not (cid and csec):
+            print("  No Reddit API credentials - using Reddit public JSON feed.")
+        print("  Source: Reddit public JSON feed (no auth)")
+        posts = RFS.scan_via_reddit_json(universe)
 
     if posts.empty:
         print("  No fresh ticker mentions fetched (source blocked/empty). "

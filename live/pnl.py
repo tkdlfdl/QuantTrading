@@ -74,7 +74,7 @@ def main(argv=None):
         return
 
     bm = _book_map()
-    print("\n  POSITIONS ({}) — by strategy".format(len(pos)))
+    print("\n  POSITIONS ({}) - by strategy".format(len(pos)))
     print("  {:<6}{:>4}{:>5}{:>10}{:>9}{:>8}".format("Sym", "Bk", "Qty", "MktVal", "P&L", "P&L%"))
     print("  " + "-" * 40)
     for p in sorted(pos, key=lambda x: float(x.unrealized_pl)):

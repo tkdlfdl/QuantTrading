@@ -148,6 +148,88 @@ def mom_alloc(book_rets: pd.DataFrame,
 
 
 # ─────────────────────────────────────────────────────────────────────
+# CHAMPION COMBINER: inverse-vol weights + vol-target overlay (+ panic gate)
+# Backtest: Sharpe 2.501-2.514, MaxDD -8.9% (2019-2026) vs Fixed EW 2.060/-19.0%.
+# Papers: Moreira-Muir 2017 JF; Harvey+ 2018 JPM; Daniel-Moskowitz 2016 JFE.
+# ─────────────────────────────────────────────────────────────────────
+def _panic_state() -> pd.Series:
+    """Daniel-Moskowitz panic state from SPY daily closes (lagged 1 day):
+    trailing 24m return < 0 AND 63d realized vol > trailing-3yr 80th pct."""
+    daily = pd.read_parquet(C.DAILY_CLOSE)
+    daily.index = pd.to_datetime(daily.index)
+    spy = daily["SPY"].dropna()
+    ret24 = spy.pct_change(C.PANIC_RET_LOOKBACK)
+    vol63 = spy.pct_change().rolling(C.PANIC_VOL_WINDOW).std() * np.sqrt(C.TRADING_DAYS)
+    q = vol63.rolling(C.PANIC_VOL_QWINDOW).quantile(C.PANIC_VOL_QUANTILE)
+    return ((ret24 < 0) & (vol63 > q)).shift(1).fillna(False)
+
+
+def ivol_vt_weights(book_rets: pd.DataFrame, panic_today: bool = False) -> dict:
+    """Current champion weights over C.ALLOC_BOOKS from trailing book returns.
+    Inverse trailing-60d vol, optional panic gate (halve A/F -> D). Weights sum
+    to 1 BEFORE the vol-target scale (applied by callers on the return series
+    or exposure level). Falls back to equal-weight while history is short."""
+    keys = [b for b in C.ALLOC_BOOKS if b in book_rets.columns]
+    hist = book_rets[keys].tail(C.IVOL_WINDOW)
+    vol = hist.std() * np.sqrt(C.TRADING_DAYS)
+    iv = {}
+    for b in keys:
+        v = float(vol.get(b, np.nan))
+        iv[b] = 1.0 / v if np.isfinite(v) and v > 1e-9 else 0.0
+    tot = sum(iv.values())
+    w = ({b: iv[b] / tot for b in keys} if tot > 0
+         else {b: 1.0 / len(keys) for b in keys})
+    if panic_today and C.PANIC_GATE:
+        freed = 0.0
+        for b in ("A", "F"):
+            if b in w:
+                freed += 0.5 * w[b]
+                w[b] *= 0.5
+        if "D" in w:
+            w["D"] += freed
+    return w
+
+
+def ivol_voltgt(book_rets: pd.DataFrame) -> pd.Series:
+    """Full champion daily-return series (for settle/replay): inverse-vol
+    weights rebalanced every IVOL_REBAL_DAYS, Daniel-Moskowitz panic gate,
+    then a de-risk-only vol-target overlay (min(1, 15% / realized 20d vol))."""
+    keys = [b for b in C.ALLOC_BOOKS if b in book_rets.columns]
+    R = book_rets[keys].fillna(0.0)
+    panic = _panic_state().reindex(R.index).fillna(False) if C.PANIC_GATE \
+        else pd.Series(False, index=R.index)
+    n = len(R)
+    port = np.zeros(n)
+    w = None
+    for t in range(n):
+        if w is None or t % C.IVOL_REBAL_DAYS == 0:
+            w = ivol_vt_weights(R.iloc[:t] if t else R.iloc[:1])
+        wt = dict(w)
+        if bool(panic.iloc[t]) and C.PANIC_GATE:
+            freed = 0.0
+            for b in ("A", "F"):
+                if b in wt:
+                    freed += 0.5 * wt[b]
+                    wt[b] *= 0.5
+            if "D" in wt:
+                wt["D"] += freed
+        port[t] = float(sum(wt[b] * R.iloc[t][b] for b in keys))
+    ser = pd.Series(port, index=R.index)
+    rv = ser.rolling(C.VT_VOL_WINDOW).std().shift(1) * np.sqrt(C.TRADING_DAYS)
+    scale = (C.VOL_TARGET_ANN / rv).clip(upper=C.VT_MAX_SCALE).fillna(1.0)
+    return ser * scale
+
+
+def vt_scale_today(port_rets: pd.Series) -> float:
+    """Current vol-target exposure scale from the champion portfolio's own
+    trailing realized vol (de-risk only, <= VT_MAX_SCALE)."""
+    rv = float(port_rets.tail(C.VT_VOL_WINDOW).std() * np.sqrt(C.TRADING_DAYS))
+    if not np.isfinite(rv) or rv <= 1e-9:
+        return 1.0
+    return float(min(C.VT_MAX_SCALE, C.VOL_TARGET_ANN / rv))
+
+
+# ─────────────────────────────────────────────────────────────────────
 # EQUAL-WEIGHT DAILY P&L  (validated sizing — fixes the -99% MaxDD bug)
 # ─────────────────────────────────────────────────────────────────────
 def equal_weight_daily_pnl(trades, prices, opens, idx, day_last, day_first,

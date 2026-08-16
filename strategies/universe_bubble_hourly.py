@@ -47,7 +47,8 @@ def run_universe_bubble_hourly(
     hourly_close: pd.DataFrame,       # bars × tickers
     ma_window_grid:  list = [20, 50, 100],
     z_window_grid:   list = [50, 100, 200],
-    threshold_grid:  list = [0.5, 0.6, 0.7, 0.8, 0.9],
+    buy_threshold_grid:  list = [0.5, 0.6, 0.7, 0.8, 0.9],
+    short_threshold_grid: list = [0.85, 0.9, 0.92, 0.95, 0.97],
     hold_hours_grid: list = [1, 2, 4, 8],
     top_n_grid:      list = [5, 10, 20],
     transaction_cost: float = 0.001,
@@ -67,8 +68,8 @@ def run_universe_bubble_hourly(
 
     hourly_borrow = short_borrow_rate / (TRADING_DAYS * 6.5)
 
-    total = (len(ma_window_grid) * len(z_window_grid) * len(threshold_grid)
-             * len(hold_hours_grid) * len(top_n_grid))
+    total = (len(ma_window_grid) * len(z_window_grid) * len(buy_threshold_grid)
+             * len(short_threshold_grid) * len(hold_hours_grid) * len(top_n_grid))
     print(f"Universe: {len(tickers)} tickers  |  {n} hourly bars")
     print(f"Pre-computing bubble scores for {len(ma_window_grid)*len(z_window_grid)} "
           f"(ma, z) combos...")
@@ -85,8 +86,8 @@ def run_universe_bubble_hourly(
     best_daily   = None
     best_params  = None
 
-    for ma, z, thresh, hold, top_n in product(
-        ma_window_grid, z_window_grid, threshold_grid, hold_hours_grid, top_n_grid
+    for ma, z, buy_thresh, short_thresh, hold, top_n in product(
+        ma_window_grid, z_window_grid, buy_threshold_grid, short_threshold_grid, hold_hours_grid, top_n_grid
     ):
         scores = score_cache[(ma, z)]
         borrow = hourly_borrow * hold   # total borrow cost per short trade
@@ -99,8 +100,8 @@ def run_universe_bubble_hourly(
             if sig.empty:
                 continue
 
-            long_cands  = sig[sig < -thresh].nsmallest(top_n)
-            short_cands = sig[sig >  thresh].nlargest(top_n)
+            long_cands  = sig[sig < -buy_thresh].nsmallest(top_n)
+            short_cands = sig[sig >  short_thresh].nlargest(top_n)
 
             has_long  = len(long_cands)  > 0
             has_short = len(short_cands) > 0
@@ -133,7 +134,7 @@ def run_universe_bubble_hourly(
 
         if len(trade_rets) < 5:
             grid_results.append(dict(
-                ma_window=ma, z_window=z, threshold=thresh,
+                ma_window=ma, z_window=z, buy_threshold=buy_thresh, short_threshold=short_thresh,
                 hold_hours=hold, top_n=top_n,
                 Sharpe=np.nan, Sortino=np.nan, Total_Return=np.nan,
                 Max_DD=np.nan, n_trades=len(trade_rets), Win_Rate=np.nan,
@@ -157,7 +158,7 @@ def run_universe_bubble_hourly(
         wr     = float(sum(r > 0 for _, r in trade_rets) / len(trade_rets))
 
         row = dict(
-            ma_window=ma, z_window=z, threshold=thresh,
+            ma_window=ma, z_window=z, buy_threshold=buy_thresh, short_threshold=short_thresh,
             hold_hours=hold, top_n=top_n,
             Sharpe=sh, Sortino=so,
             Total_Return=float(wealth.iloc[-1] - 1),
