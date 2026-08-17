@@ -110,3 +110,10 @@ signal) → **`backtest`** (to evaluate). Never estimate metrics yourself.
   signature) before the data is used; live F ranking now carries a splice
   guard (settle.py) as defense-in-depth. Ticker changes and reuses are a
   recurring hazard — never assume a column name is one instrument forever.
+
+- **2026-08-17 (adjustment-basis splice):** extending a daily panel with
+  hourly-source closes mixes adjustment bases — split/dividend stocks get
+  phantom 100-300% jumps at the join (DD, DELL entered live Book A on phantom
+  momentum). Rule: never append prices across sources without verifying the
+  adjustment basis matches at the boundary; always jump-scan after any panel
+  extension. Splice guards now cover A, F, G rankings.

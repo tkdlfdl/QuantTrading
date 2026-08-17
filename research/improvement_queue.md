@@ -7,6 +7,14 @@ below 3 items, run a literature sweep to refill (check papers_read.md first —
 re-testing rejected ideas is low priority and needs new evidence or a new
 angle; unread papers and untested ideas come first).
 
+### 34. Fix daily-panel adjustment-basis splices  [DATA — important]
+- **Spec:** prepare_data's daily extension appends hourly-basis closes onto the
+  historical daily panel -> phantom jumps for split/dividend stocks (DD +203%
+  6/22, DELL +213% 6/30 — both entered live Book A on phantom momentum).
+  Root fix: extend the daily panel from a consistent auto-adjusted daily
+  source (yfinance daily / DuckDB), rebase at the join, and re-audit the whole
+  panel for >100% 1-day moves. Interim: splice guard now in replay_A ranking.
+
 ## Queue
 
 ### 33. Recalibrate live rollback bounds to settle basis  [PENDING — important]
