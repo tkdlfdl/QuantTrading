@@ -85,6 +85,15 @@ X_INCUBATION_DAYS  = 60
 #                robustness 3/3 monotone. Zero weight until review.
 DU_INCUBATION_START = "2026-08-18"
 DU_INCUBATION_DAYS  = 60
+# ── Re-baseline + rollback calibration (2026-08-17, post-mortem #35) ──
+# Track record re-baselined: inception 2026-08-18 (prior record measured 4
+# engine defects, archived in live/state/archive_incident_2026-08/).
+# SETTLE-BASIS champion expectation (live costs 0.25%/side + live mechanics,
+# recorded portfolio_ivolvt_settle_basis): Sharpe 1.43 / CAGR 24.3% / MaxDD
+# -30.9%. Mechanical rollback bound (1.25x settle-basis MaxDD):
+ROLLBACK_MAXDD_BOUND = -0.386   # NOTE: mechanically derived; consider a
+                                # tighter absolute override per risk appetite
+ROLLBACK_SHARPE_FLOOR = -2.37   # settle-basis worst rolling-60d Sharpe
 ALLOC_SHARES = {"D": 2.0}   # blended D = two cohort shares in inverse-vol weighting
 PORTFOLIOS = ["FixedEW", "MomAlloc", "IvolVT"]
 ALL_BOOKS = BOOKS + PORTFOLIOS

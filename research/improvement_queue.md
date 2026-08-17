@@ -17,13 +17,6 @@ angle; unread papers and untested ideas come first).
   source (yfinance daily / DuckDB), rebase at the join, and re-audit the whole
   panel for >100% 1-day moves. Interim: splice guard now in replay_A ranking.
 
-### 33. Recalibrate live rollback bounds to settle basis  [PENDING — important]
-- **Spec:** compute settle-basis champion series (live costs/mechanics), set
-  IvolVT rollback MaxDD bound from ITS backtest MaxDD x1.25 (not the research
-  basis -8.3%); document dual-basis rule in monitor.
-- **Source:** structural finding #113 (settle-D 1.61 vs research-D 2.74).
-
-
 ### 21. D sector-relative ranking tie-break  [Hameed-Mian 2015, #91]
 - **Spec:** keep raw score < -0.8 gate (beta bounce is part of the edge, #47);
   rank eligible names by WITHIN-SECTOR score z instead of raw score. GICS-lite
@@ -47,6 +40,13 @@ angle; unread papers and untested ideas come first).
   C's trades 0/0.5/1 — the only sanctioned adaptivity; chronological CV.
 
 ## Done
+
+- **2026-08-17 | #33 rollback recalibration + RE-BASELINE — DONE**
+  Settle-basis champion computed (portfolio_ivolvt_settle_basis): Sharpe 1.43 /
+  CAGR 24.3% / MaxDD -30.9% -> mechanical bound -38.6% (config
+  ROLLBACK_MAXDD_BOUND; flagged for possible tighter absolute override).
+  Track record re-baselined: inception 2026-08-18; incident record archived
+  (live/state/archive_incident_2026-08/). Dual-basis rule documented.
 
 - **2026-08-17 | #35 POST-MORTEM (rollback breach) — CLOSED, strategy exonerated**
   -28.4% live DD fully attributed to 4 engine defects: (1) replay_F tail-block
