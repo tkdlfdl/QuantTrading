@@ -12,6 +12,21 @@ angle; unread papers and untested ideas come first).
 ### 44. M4 F-dip sleeve  [after DU decision, ~mid-Oct incubation review]
 - **Spec:** capitulation entries within top-50 750h-momentum names, 40-120h holds.
 
+### 45. NDX membership history acquisition  [DATA — unblocks index-rebal reverse side]
+- **Spec:** scrape Nasdaq annual reconstitution press releases (2008-2025) to
+  build NDX membership through time. Unblocks: (a) "S&P member added to NDX"
+  event study; (b) December reconstitution prediction (mkt-cap rank vs
+  smallest member — shares_outstanding.parquet x price gives cap history);
+  (c) exact historical dual-index flags for the #139 migration cohort.
+  Note: live Wikipedia NDX constituents table is GONE (universe scraper
+  falls back to cache); pinned-revision workaround documented in cycle25.
+
+### 46. Earnings-calendar acquisition retry  [DATA — throttled 2026-08-17]
+- **Spec:** fetch_earnings_dates.py is checkpoint/resume-ready; per-ticker
+  yfinance earnings endpoint was hard rate-limited (batch chart endpoint
+  unaffected). Retry off-hours / lower frequency; then run
+  cycle24_earnings_premium.py (Frazzini-Lamont gates pre-registered).
+
 ## Done
 
 - **2026-08-17 | Cycle 23: QUEUE CLEARED — #41/#34 shipped, #23/#24/#26/#40/#27 verdicts, 0 adoptions**
@@ -311,3 +326,10 @@ angle; unread papers and untested ideas come first).
   MaxDD -8.9% unchanged, CAGR 45.3%→43.5%; robustness 9/9 perturbation grid.
   Records: book_c_overlap_cap_*, portfolio_champion_cappedC_*.
   Adoption into live C engine = human-gated (pending).
+
+### 47. S&P announcement-date acquisition  [DATA — the only live index-rebal angle]
+- **Spec:** #139 killed all post-effective-date variants; literature edge is
+  announcement->effective (5-10 day window). Source: S&P DJI press-release
+  archive (spglobal.com news; dates only, no paywall content needed).
+  If acquired: front-run test on adds AND the dual-index migration cohort
+  (which showed the STRONGEST post-effective decay = most pre-priced).
