@@ -9,6 +9,13 @@ angle; unread papers and untested ideas come first).
 
 ## Queue
 
+### 33. Recalibrate live rollback bounds to settle basis  [PENDING — important]
+- **Spec:** compute settle-basis champion series (live costs/mechanics), set
+  IvolVT rollback MaxDD bound from ITS backtest MaxDD x1.25 (not the research
+  basis -8.3%); document dual-basis rule in monitor.
+- **Source:** structural finding #113 (settle-D 1.61 vs research-D 2.74).
+
+
 ### 21. D sector-relative ranking tie-break  [Hameed-Mian 2015, #91]
 - **Spec:** keep raw score < -0.8 gate (beta bounce is part of the edge, #47);
   rank eligible names by WITHIN-SECTOR score z instead of raw score. GICS-lite
@@ -23,13 +30,6 @@ angle; unread papers and untested ideas come first).
 - **Spec:** route fast/rich oversold names to D8, slow/strong to D14 (replaces
   identical selection in both sleeves). Test only if #23 shows cohort spread.
 
-### 25. D phase-tranche + threshold barbell  [TOP — extends the proven ensemble win]
-- **Spec:** (i) tranche each D sleeve across entry phases (start offsets 0..hold-1,
-  1/hold weight each — the JT construction); (ii) equal-weight a threshold
-  barbell (0.7/0.9) beside 0.8. Turnover nets across variants.
-- **Source:** Hoffstein 2019; JT 1993; DeMiguel; cs_hardsci_sweep2 idea 1.
-- **Gate:** significance p<0.10 vs 2.781 champion.
-
 ### 26. D asymmetric entry/exit bands  [Blitz FAJ 2023, #97]
 - **Spec:** enter < -0.8, but exit only when score > -0.4 (lazy exit), DD-capped
   at 21h max hold. Cuts re-entry churn.
@@ -37,12 +37,6 @@ angle; unread papers and untested ideas come first).
 ### 27. Book C meta-labeling filter  [Joubert 2022, #98]
 - **Spec:** PRE-REGISTERED single ridge-logistic on (sigma-day features) sizing
   C's trades 0/0.5/1 — the only sanctioned adaptivity; chronological CV.
-
-### 33. Recalibrate live rollback bounds to settle basis  [PENDING — important]
-- **Spec:** compute settle-basis champion series (live costs/mechanics), set
-  IvolVT rollback MaxDD bound from ITS backtest MaxDD x1.25 (not the research
-  basis -8.3%); document dual-basis rule in monitor.
-- **Source:** structural finding #113 (settle-D 1.61 vs research-D 2.74).
 
 ## Done
 
