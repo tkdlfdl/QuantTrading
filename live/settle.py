@@ -410,6 +410,44 @@ def replay_G(panels):
 
 
 # ─────────────────────────────────────────────────────────────────────
+# BOOK X — Cross-Asset ETF Momentum (INCUBATING; zero champion weight)
+# ─────────────────────────────────────────────────────────────────────
+def replay_X(panels):
+    """12-1 momentum top-3 of 15 ETFs, equal-weight, monthly, ungated.
+    Data: data/cache/etf_daily_close.parquet (refreshed by
+    prepare_data.refresh_etf_daily). v1 position bug (ffill accumulation)
+    voided 2026-08-16 — this uses the explicit monthly-target construction."""
+    p = C.PARAMS["X"]
+    path = C.CACHE_DIR / "etf_daily_close.parquet"
+    if not path.exists():
+        return pd.Series(dtype=float), [], []
+    raw = pd.read_parquet(path)
+    raw.index = pd.to_datetime(raw.index)
+    raw = raw[[t for t in p["etf_universe"] if t in raw.columns]]
+    r = raw.pct_change()
+    mom = raw.pct_change(p["mom_lookback_days"]).shift(p["mom_skip_days"])
+    month_end = raw.index.to_series().dt.month.diff().fillna(1) != 0
+    targets = pd.DataFrame(index=raw.index[month_end], columns=raw.columns, dtype=float)
+    for d in targets.index:
+        m_ = mom.loc[d].dropna()
+        row = pd.Series(0.0, index=raw.columns)
+        if len(m_) >= 5:
+            for t in m_.nlargest(p["top_n"]).index:
+                row[t] = 1.0 / p["top_n"]
+        targets.loc[d] = row
+    pos = targets.reindex(raw.index).ffill().fillna(0.0).shift(1)
+    ser = ((r.fillna(0) * pos).sum(axis=1)
+           - pos.diff().abs().sum(axis=1).fillna(0) * p["tc_one_way"])
+    ser = ser.dropna()
+    last = pos.iloc[-1]
+    open_positions = [dict(book="X", ticker=t, side=1, entry_ts=str(pos.index[-1]),
+                           exit_ts="open", entry_px=float(raw[t].iloc[-1]),
+                           exit_px=float(raw[t].iloc[-1]))
+                      for t in last[last > 0].index]
+    return ser, open_positions, []
+
+
+# ─────────────────────────────────────────────────────────────────────
 # REPLAY ALL BOOKS
 # ─────────────────────────────────────────────────────────────────────
 def replay_all(panels):
@@ -428,12 +466,13 @@ def replay_all(panels):
     rE, _, _      = replay_E(panels)
     rF, posF, clF = replay_F(panels)
     rG, posG, _   = replay_G(panels)
+    rX, posX, _   = replay_X(panels)
 
     book_rets = pd.DataFrame(
-        {"A": rA, "B": rB, "C": rC, "D": rD, "E": rE, "F": rF, "G": rG}
+        {"A": rA, "B": rB, "C": rC, "D": rD, "E": rE, "F": rF, "G": rG, "X": rX}
     ).sort_index()
     positions = {"A": [], "B": posB, "C": [], "D": posD, "E": [], "F": posF,
-                 "G": posG}
+                 "G": posG, "X": posX}
     closed = clB + clD + clF
     trades_df = pd.DataFrame(closed) if closed else pd.DataFrame(
         columns=["book", "ticker", "side", "entry_ts", "exit_ts", "entry_px", "exit_px", "ret"])

@@ -48,7 +48,7 @@ NAN_MAX          = 0.30          # drop tickers with >30% NaN (per-book where re
 
 # ── Books ───────────────────────────────────────────────────────────
 # Individual strategy books + derived portfolios.
-BOOKS = ["A", "B", "C", "D", "E", "F", "G"]
+BOOKS = ["A", "B", "C", "D", "E", "F", "G", "X"]
 # Books eligible for CHAMPION (IvolVT) capital — audit + promotion decisions:
 #   B dropped  : honest Sharpe 0.775, ~zero marginal portfolio contribution (2026-08-15)
 #   E excluded : audit Sharpe 0.63 full-history; sentiment feed stale since 2026-06
@@ -69,6 +69,15 @@ BOOKS = ["A", "B", "C", "D", "E", "F", "G"]
 ALLOC_BOOKS = ["A", "C", "D", "F"]
 G_INCUBATION_START = "2026-08-17"    # first settle date of the incubation window
 G_INCUBATION_DAYS  = 60              # trading days before promotion review
+#   X INCUBATING: cross-asset ETF momentum (Faber GTAA/dual-momentum lineage),
+#                added 2026-08-17 at ZERO weight. First non-single-stock book:
+#                15 ETFs (bonds/gold/cmdty/intl/REIT/credit), 12-1 mom top-3,
+#                UNGATED (grid: ungated uniformly beats gated — champion's
+#                vol-target already de-risks), monthly. Backtest: standalone
+#                ~0.6, corr 0.22, positive 2008/2020/2022; champ+X @0.25
+#                shares +0.115 (p=0.034), 12/12 perturbation cells positive.
+X_INCUBATION_START = "2026-08-17"
+X_INCUBATION_DAYS  = 60
 ALLOC_SHARES = {"D": 2.0}   # blended D = two cohort shares in inverse-vol weighting
 PORTFOLIOS = ["FixedEW", "MomAlloc", "IvolVT"]
 ALL_BOOKS = BOOKS + PORTFOLIOS
@@ -81,6 +90,7 @@ BOOK_LABELS = {
     "E": "Reddit Sentiment Long-Only",
     "F": "Universe Hourly Momentum Long",
     "G": "Overnight-Share Cross-Section (INCUBATING)",
+    "X": "Cross-Asset ETF Momentum (INCUBATING)",
     "FixedEW": "Fixed Equal-Weight Portfolio",
     "MomAlloc": "Momentum-Allocation Portfolio",
     "IvolVT": "Champion: Inverse-Vol + 15% Vol-Target (A/C/D/F, D=2-sleeve blend)",
@@ -159,6 +169,14 @@ PARAMS = {
     # standalone Sharpe peak, NOT the p-argmax) per anti-selection rules.
     "G": dict(
         spread_window_days=252, hold_days=21, top_n=7, min_names=50,
+        tc_one_way=TC_ONE_WAY,
+    ),
+    # X: Cross-asset ETF momentum — INCUBATING. 12-1 momentum, top-3 of 15
+    # ETFs, equal-weight, monthly, NO trend gate (mid-plateau spec).
+    "X": dict(
+        etf_universe=["TLT","IEF","GLD","SLV","DBC","USO","UUP","EEM","EFA",
+                      "IWM","VNQ","HYG","LQD","SPY","QQQ"],
+        mom_lookback_days=252, mom_skip_days=21, top_n=3,
         tc_one_way=TC_ONE_WAY,
     ),
     # E: Reddit sentiment long-only — buy capitulation + moderate hype (no shorts)

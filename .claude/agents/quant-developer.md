@@ -101,3 +101,9 @@ data turned out underspecified, route back to `researcher` / `data-engineer`.
   SE 0.000 is the tell: identical series). Override the list test-scope or use
   an inline builder; a zero-delta result on an added book is a harness bug
   until proven otherwise.
+
+- **2026-08-17 (Book X v1):** `replace(0, NaN)` before ffill on a position
+  matrix silently accumulates stale positions (all-cash rows and unpicked
+  columns inherit prior holdings). Always build an explicit per-rebalance
+  target matrix and ffill THAT. Tell: impossible MaxDD with contradictory
+  portfolio results.

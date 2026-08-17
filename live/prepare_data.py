@@ -76,6 +76,7 @@ def prepare(refresh: bool = True, verbose: bool = True) -> pd.Timestamp:
     if refresh:
         refresh_hourly(verbose=verbose)
         refresh_daily_ohlcv(verbose=verbose)
+        refresh_etf_daily(verbose=verbose)
         sync_daily_close(verbose=verbose)
     last = latest_complete_date()
     if verbose:
@@ -126,4 +127,23 @@ def refresh_daily_ohlcv(verbose=True, lookback_days=14) -> bool:
     except Exception as e:
         if verbose:
             print(f"  [prepare] daily OHLCV refresh failed: {e}")
+        return False
+
+
+def refresh_etf_daily(verbose=True) -> bool:
+    """Refresh the cross-asset ETF daily-close cache (Book X)."""
+    try:
+        import yfinance as yf
+        import pandas as _pd
+        etfs = C.PARAMS["X"]["etf_universe"]
+        raw = yf.download(etfs, start="2002-01-01", interval="1d",
+                          auto_adjust=True, progress=False)["Close"]
+        raw.index = _pd.to_datetime(raw.index).tz_localize(None)
+        raw.to_parquet(C.CACHE_DIR / "etf_daily_close.parquet")
+        if verbose:
+            print(f"  [prepare] ETF daily cache refreshed ({raw.shape[0]} rows).")
+        return True
+    except Exception as e:
+        if verbose:
+            print(f"  [prepare] ETF refresh failed: {e}")
         return False

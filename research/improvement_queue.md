@@ -40,6 +40,13 @@ angle; unread papers and untested ideas come first).
 
 ## Done
 
+- **2026-08-17 | Cross-asset ETF momentum (Book X) — INCUBATING**
+  New data (15 ETFs cached 2002+) unlocked first non-single-stock book.
+  12/12 perturbation cells positive; +0.115 p=0.034 @0.25 shares; positive in
+  2008/2020/2022. Ungated spec (gate duplicates champion vol-target). v1 run
+  VOIDED (ffill position bug — caught by impossible -93% MaxDD). Zero-weight
+  incubation with Book G; both review after 60 trading days.
+
 - **2026-08-16 | Appraisal-sizing round | Overnight-share (Book G candidate) — PASSES**
   User-driven relaxation (less-correlated, not orthogonal) -> Treynor-Black bar:
   Sharpe > corr x 2.79. G: standalone 0.988, corr 0.13, bar 0.37. At 0.25 ivol
