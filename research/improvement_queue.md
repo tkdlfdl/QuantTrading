@@ -38,6 +38,12 @@ angle; unread papers and untested ideas come first).
 - **Spec:** PRE-REGISTERED single ridge-logistic on (sigma-day features) sizing
   C's trades 0/0.5/1 — the only sanctioned adaptivity; chronological CV.
 
+### 33. Recalibrate live rollback bounds to settle basis  [PENDING — important]
+- **Spec:** compute settle-basis champion series (live costs/mechanics), set
+  IvolVT rollback MaxDD bound from ITS backtest MaxDD x1.25 (not the research
+  basis -8.3%); document dual-basis rule in monitor.
+- **Source:** structural finding #113 (settle-D 1.61 vs research-D 2.74).
+
 ## Done
 
 - **2026-08-17 | Cycle 15 | four new-book candidates — one find**

@@ -48,7 +48,7 @@ NAN_MAX          = 0.30          # drop tickers with >30% NaN (per-book where re
 
 # ── Books ───────────────────────────────────────────────────────────
 # Individual strategy books + derived portfolios.
-BOOKS = ["A", "B", "C", "D", "E", "F", "G", "X"]
+BOOKS = ["A", "B", "C", "D", "E", "F", "G", "X", "DU"]
 # Books eligible for CHAMPION (IvolVT) capital — audit + promotion decisions:
 #   B dropped  : honest Sharpe 0.775, ~zero marginal portfolio contribution (2026-08-15)
 #   E excluded : audit Sharpe 0.63 full-history; sentiment feed stale since 2026-06
@@ -78,6 +78,13 @@ G_INCUBATION_DAYS  = 60              # trading days before promotion review
 #                shares +0.115 (p=0.034), 12/12 perturbation cells positive.
 X_INCUBATION_START = "2026-08-17"
 X_INCUBATION_DAYS  = 60
+#   DU INCUBATING: D x momentum "dips in uptrends" (Cycle 15 synthesis) —
+#                D signal masked to names with positive 126-trading-day
+#                momentum. Standalone 2.57/-6.8%; as 0.25-share third D-family
+#                sleeve champ +0.046 at p=0.010 (strongest in program),
+#                robustness 3/3 monotone. Zero weight until review.
+DU_INCUBATION_START = "2026-08-18"
+DU_INCUBATION_DAYS  = 60
 ALLOC_SHARES = {"D": 2.0}   # blended D = two cohort shares in inverse-vol weighting
 PORTFOLIOS = ["FixedEW", "MomAlloc", "IvolVT"]
 ALL_BOOKS = BOOKS + PORTFOLIOS
@@ -91,6 +98,7 @@ BOOK_LABELS = {
     "F": "Universe Hourly Momentum Long",
     "G": "Overnight-Share Cross-Section (INCUBATING)",
     "X": "Cross-Asset ETF Momentum (INCUBATING)",
+    "DU": "Contrarian Dips-in-Uptrends (INCUBATING)",
     "FixedEW": "Fixed Equal-Weight Portfolio",
     "MomAlloc": "Momentum-Allocation Portfolio",
     "IvolVT": "Champion: Inverse-Vol + 15% Vol-Target (A/C/D/F, D=2-sleeve blend)",
@@ -145,6 +153,14 @@ PARAMS = {
     "D": dict(
         bubble_ma_hours=104, threshold=-0.8,
         hold_hours=8, top_n=20,
+        tc_one_way=TC_ONE_WAY,
+    ),
+    # DU: D x momentum double-sort — INCUBATING third D-family sleeve.
+    # Same signal/params as D but eligible set masked to stocks with positive
+    # trailing 126-trading-day momentum ("dips in uptrends").
+    "DU": dict(
+        bubble_ma_hours=104, threshold=-0.8,
+        hold_hours=8, top_n=20, mom_filter_days=126,
         tc_one_way=TC_ONE_WAY,
     ),
     # D14: INTERNAL sleeve params for blended Book D (not a standalone book).
