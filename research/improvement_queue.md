@@ -53,6 +53,13 @@ angle; unread papers and untested ideas come first).
 
 ## Done
 
+- **2026-08-17 | #26/#23 attempt — VOIDED (harness, not verdicts)**
+  #26 asym-bands custom loop produced -0.333 vs 2.740 WITHOUT an anchor run —
+  violates the patch-with-anchor rule; result void, idea UNTESTED. #23
+  diagnostic crashed pre-output. Both return to queue for properly anchored
+  implementations (Saturday cycle). Lesson re-confirmed: custom engine loops
+  without anchors produce unusable numbers.
+
 - **2026-08-17 | Data-unlock round (Cycle 21) — 2 permanent assets, 3 questions closed**
   FOMC scrape rejected by own validation (honest block; #37 needs better source).
   VIX term structure cached -> convexity FINALLY CLOSED (#124: UVXY bleeds in

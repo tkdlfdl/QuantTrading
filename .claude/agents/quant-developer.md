@@ -107,3 +107,8 @@ data turned out underspecified, route back to `researcher` / `data-engineer`.
   columns inherit prior holdings). Always build an explicit per-rebalance
   target matrix and ffill THAT. Tell: impossible MaxDD with contradictory
   portfolio results.
+
+- **2026-08-17 (#26 void):** the anchor rule applies to EXIT-mechanic changes
+  too — a custom entry/exit loop must first reproduce the baseline with the
+  baseline's exit (fixed hold) before testing the new exit. A -0.9 delta with
+  no anchor is a harness indictment, not an idea verdict.
