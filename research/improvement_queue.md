@@ -46,6 +46,14 @@ angle; unread papers and untested ideas come first).
 
 ## Done
 
+- **2026-08-17 | Cycle 16 | four structural candidates — all no-gain, all informative**
+  F-tranching wash (RTL needs idiosyncratic cohort differences; F's cohorts are
+  regime-identical); D barbell significantly NEGATIVE (0.8 threshold is optimal,
+  p=0.041); asset-class capitulation dead; sector reversal 18/18 vs champion but
+  ZERO marginal on full stack (redundant with D-complex). Additive capacity of
+  in-hand data is saturating — three incubators + D-edge surgical queue remain
+  the frontier.
+
 - **2026-08-17 | Cycle 15 | four new-book candidates — one find**
   (ii) weekly x-asset reversal DEAD; (iv) credit regime no-gain; (i) sector
   rotation 9/9 positive BUT redundant vs incubating Book X (corr 0.58, marginal
