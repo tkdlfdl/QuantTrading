@@ -7,6 +7,21 @@ below 3 items, run a literature sweep to refill (check papers_read.md first —
 re-testing rejected ideas is low priority and needs new evidence or a new
 angle; unread papers and untested ideas come first).
 
+## Queue
+
+### 35. POST-MORTEM: live rollback breach 2026-08-17  [TOP PRIORITY — blocks all candidate work]
+- **Spec:** live IvolVT drawdown -28.4% max / -19.3% current vs -11.1% bound —
+  rollback rule FIRED (see live/state/incident_20260817_rollback.md; LIVE_BOOK
+  revert is PENDING HUMAN DECISION per hard rails). Post-mortem must fix and
+  verify: (a) settle pipeline stalled since 2026-07-08 (NASDAQ-100 Wikipedia
+  scrape aborts hourly refresh + Book E sentiment refresh); (b) Book F flatline
+  — largest ivol weight (0.628) yet n_pos=0 since inception; (c) EOD
+  attribution anomalies (07-06 gross 328%, 07-23 day_pnl == equity, frozen
+  sharpe_itd/maxdd_itd columns); (d) then catch up settles through current and
+  re-evaluate the rollback rule on clean data. Relates to #34 (splice root fix)
+  and #33 (settle-basis bound recalibration).
+- **Source:** Cycle 18 MONITOR breach (incident report), 2026-08-17.
+
 ### 34. Fix daily-panel adjustment-basis splices  [DATA — important]
 - **Spec:** prepare_data's daily extension appends hourly-basis closes onto the
   historical daily panel -> phantom jumps for split/dividend stocks (DD +203%
@@ -14,8 +29,6 @@ angle; unread papers and untested ideas come first).
   Root fix: extend the daily panel from a consistent auto-adjusted daily
   source (yfinance daily / DuckDB), rebase at the join, and re-audit the whole
   panel for >100% 1-day moves. Interim: splice guard now in replay_A ranking.
-
-## Queue
 
 ### 33. Recalibrate live rollback bounds to settle basis  [PENDING — important]
 - **Spec:** compute settle-basis champion series (live costs/mechanics), set
