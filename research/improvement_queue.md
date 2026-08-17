@@ -47,7 +47,17 @@ angle; unread papers and untested ideas come first).
 ### 40. D closing-auction entry tilt  [free; merges old #22]
 - **Spec:** shift D entries to closing auction (EOD loser rebound + cheapest venue).
 
+### 41. Wire sector-relative ranking into live replay_D  [adoption engineering]
+- **Spec:** PARAMS["D"]["rank"]="sector_rel" + sector_map.json means in replay_D;
+  anchor: raw mode must reproduce current D; validate vs book_d8_sector_rel.
+
 ## Done
+
+- **2026-08-17 | #39a industry-adjusted D8 — IMPROVED ⭐ + ALL-IN computed**
+  Sector map downloaded (permanent: sector_map.json). Adjusted D8: 2.808
+  standalone, champion 2.800 (+0.019 p=0.038), perturbation 4/6. ALL-IN
+  (adjusted blend + G/X/DU): **Sharpe 2.930 / CAGR 43.4% / MaxDD -7.7%**
+  (delta +0.149 p=0.016, recorded portfolio_allin_v2). Live wiring = #41.
 
 - **2026-08-17 | Cycle 20 | #36 + #38 — tested-no-gain**
   Rebalancing-flow (long-only adaptation): -0.22 standalone, harmful on stack

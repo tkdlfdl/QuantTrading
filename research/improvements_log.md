@@ -65,3 +65,11 @@ exact metric deltas vs its baseline. Appended automatically by
 - **CAGR:**   43.5% → 43.9%  (+0.4%)
 - **MaxDD:**  -8.9% → -8.2%  (+0.7%)
 - **Records:** portfolio_champ_d14
+
+### 2026-08-17 — Industry-adjusted D8 ranking (sector-relative)
+- **Source:** Hameed-Mian 2015 JFQA; Stosik-Zaremba 2026 (registry #91, #119)
+- **Sharpe:** 2.781 → 2.800  (**+0.019**)
+- **CAGR:**   43.9% → 44.5%  (+0.5%)
+- **MaxDD:**  -8.2% → -8.2%  (-0.0%)
+- **Records:** book_d8_sector_rel
+- **Notes:** p=0.038
