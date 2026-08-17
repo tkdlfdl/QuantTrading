@@ -155,3 +155,8 @@ timestamp,name,check,verdict,detail
 2026-08-17T19:47:05+00:00,book_fdip_40h,C3-metrics,PASS,recomputed metrics match history.json
 2026-08-17T19:47:05+00:00,book_fdip_40h,C4-integrity,PASS,"n=1674, zero-days 17%, max |ret| 20.0%"
 2026-08-17T19:47:05+00:00,book_fdip_40h,OVERALL,PASS,4/3 checks clean
+2026-08-17T20:26:47+00:00,portfolio_allin_v4,C1-sign,PASS,"Sharpe 3.03, total 1532.06% — signs consistent"
+2026-08-17T20:26:47+00:00,portfolio_allin_v4,C2-maxdd,PASS,MaxDD -7.20% over 1889 days
+2026-08-17T20:26:47+00:00,portfolio_allin_v4,C3-metrics,PASS,recomputed metrics match history.json
+2026-08-17T20:26:47+00:00,portfolio_allin_v4,C4-integrity,PASS,"n=1889, zero-days 0%, max |ret| 7.5%"
+2026-08-17T20:26:47+00:00,portfolio_allin_v4,OVERALL,PASS,4/3 checks clean
