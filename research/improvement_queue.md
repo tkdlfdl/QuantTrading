@@ -48,6 +48,13 @@ angle; unread papers and untested ideas come first).
 
 ## Done
 
+- **2026-08-17 | Cycle 17 | new data + 3 strategies — all no-gain vs full stack**
+  Permanent data adds: yields_daily.parquet (1995+), etf_extended_close.parquet
+  (29 assets incl. countries + BTC/ETH). Expanded-X redundant (corr 0.68);
+  crypto trend good standalone (1.10) but nothing at portfolio; curve tilt dead.
+  The full-stack bar (~2.92 projected) is holding against everything in-hand
+  data can produce.
+
 - **2026-08-17 | Cycle 16 | four structural candidates — all no-gain, all informative**
   F-tranching wash (RTL needs idiosyncratic cohort differences; F's cohorts are
   regime-identical); D barbell significantly NEGATIVE (0.8 threshold is optimal,
