@@ -185,6 +185,12 @@ def replay_A(panels):
     lookback, holding, top = p["lookback_days"], p["rebalance_days"], p["top_n"]
     ret_daily = close.pct_change().ffill().fillna(0)
     ret_mom   = close.pct_change(lookback).ffill().fillna(0)
+    # SPLICE GUARD (2026-08-17): daily panel's hourly-close extension can mix
+    # adjustment bases (DD +203% 6/22, DELL +213% 6/30 phantom jumps) — mask
+    # tickers with any 1-day |move| > 100% inside the lookback out of the
+    # ranking. Root fix = consistent-basis daily refresh (queue #34).
+    _jump   = close.pct_change().abs().rolling(lookback, min_periods=1).max()
+    ret_mom = ret_mom.mask(_jump > 1.0, -9.99)   # flagged -> never top-ranked
 
     rows = []
     for i in range(lookback + 1, len(ret_mom), holding):
