@@ -36,30 +36,95 @@ def refresh_hourly(verbose=True) -> bool:
         return False
 
 
+def _rebase_to_panel(base: pd.DataFrame, add: pd.DataFrame) -> pd.DataFrame:
+    """Rebase each column of `add` onto the panel's price basis using the last
+    date present in both (factor = base/add there). Columns with no overlap
+    are left NaN — better a gap than a phantom jump. (Queue #34: mixed
+    adjustment bases created +100..900% splice moves that entered Book A's
+    momentum ranking.)"""
+    join = [dt for dt in add.index if dt in base.index]
+    out = pd.DataFrame(np.nan, index=add.index, columns=base.columns)
+    for c in base.columns:
+        if c not in add.columns:
+            continue
+        for dt in reversed(join):
+            b, v = base.at[dt, c], add.at[dt, c]
+            if np.isfinite(b) and np.isfinite(v) and v > 0:
+                out[c] = add[c] * (b / v)
+                break
+    return out
+
+
+def _guard_jumps(base: pd.DataFrame, new_rows: pd.DataFrame, verbose=True) -> pd.DataFrame:
+    """NaN-out appended cells implying a >100% 1-day move vs the previous
+    panel value (loaders ffill over the gap). Real >100% days exist but are
+    rare; a false NaN costs one stale close, a false jump poisons rankings."""
+    prev = base.iloc[-1]
+    guarded = new_rows.copy()
+    for dt in guarded.index:
+        row = guarded.loc[dt]
+        jump = (row / prev - 1).abs() > 1.0
+        bad = row.index[jump.fillna(False)]
+        if len(bad):
+            if verbose:
+                print(f"  [prepare] JUMP GUARD {dt.date()}: masked {list(bad)[:6]}"
+                      f"{'...' if len(bad) > 6 else ''}")
+            guarded.loc[dt, bad] = np.nan
+        prev = row.combine_first(prev)
+    return guarded
+
+
 def sync_daily_close(verbose=True) -> None:
     """
-    Append recent daily closes (derived from the hourly close panel) onto the extended
-    daily-close parquet, so Book A stays current beyond the static historical file.
+    Extend the daily-close parquet past the historical file so Book A stays
+    current. Primary source: yfinance auto-adjusted daily closes, REBASED
+    per-ticker at the join (consistent basis — queue #34 root fix). Fallback
+    when the fetch fails: hourly-derived closes, same rebase + jump guard.
     """
     try:
-        hc = pd.read_parquet(C.MERGED_HOURLY_CLOSE)
-        hc.index = pd.to_datetime(hc.index)
-        daily_from_hourly = hc.groupby(hc.index.normalize()).last()
-        daily_from_hourly.index = pd.to_datetime(daily_from_hourly.index)
+        if not C.DAILY_CLOSE.exists():
+            return
+        base = pd.read_parquet(C.DAILY_CLOSE)
+        base.index = pd.to_datetime(base.index)
+        last = base.index.max()
 
-        if C.DAILY_CLOSE.exists():
-            base = pd.read_parquet(C.DAILY_CLOSE)
-            base.index = pd.to_datetime(base.index)
-            new_dates = daily_from_hourly.index[daily_from_hourly.index > base.index.max()]
-            if len(new_dates) > 0:
-                add = daily_from_hourly.loc[new_dates].reindex(columns=base.columns)
-                merged = pd.concat([base, add])
-                merged = merged[~merged.index.duplicated(keep="last")].sort_index()
-                merged.to_parquet(C.DAILY_CLOSE)
-                if verbose:
-                    print(f"  [prepare] appended {len(new_dates)} daily-close rows for Book A.")
-            elif verbose:
+        add = None
+        try:
+            import yfinance as yf
+            start = (last - pd.Timedelta(days=10)).strftime("%Y-%m-%d")
+            fetch = yf.download(list(base.columns), start=start, interval="1d",
+                                auto_adjust=True, progress=False, threads=True)["Close"]
+            fetch.index = pd.to_datetime(fetch.index).tz_localize(None)
+            if fetch.index.max() > last:
+                add = _rebase_to_panel(base, fetch)
+        except Exception as e:
+            if verbose:
+                print(f"  [prepare] adjusted daily fetch failed ({e}); hourly fallback.")
+        if add is None:
+            hc = pd.read_parquet(C.MERGED_HOURLY_CLOSE)
+            hc.index = pd.to_datetime(hc.index)
+            dfh = hc.groupby(hc.index.normalize()).last()
+            dfh.index = pd.to_datetime(dfh.index)
+            add = _rebase_to_panel(base, dfh[dfh.index > last - pd.Timedelta(days=10)])
+
+        new_rows = add[add.index > last]
+        # only append fully-completed trading days (hourly cache is the clock;
+        # a live intraday "close" from yfinance would poison the last row)
+        try:
+            complete_through = latest_complete_date()
+            new_rows = new_rows[new_rows.index <= complete_through]
+        except Exception:
+            pass
+        if len(new_rows) == 0:
+            if verbose:
                 print("  [prepare] daily-close panel already current.")
+            return
+        new_rows = _guard_jumps(base, new_rows, verbose=verbose)
+        merged = pd.concat([base, new_rows])
+        merged = merged[~merged.index.duplicated(keep="last")].sort_index()
+        merged.to_parquet(C.DAILY_CLOSE)
+        if verbose:
+            print(f"  [prepare] appended {len(new_rows)} daily-close rows (adjusted basis).")
     except Exception as e:
         if verbose:
             print(f"  [prepare] daily-close sync skipped: {e}")
