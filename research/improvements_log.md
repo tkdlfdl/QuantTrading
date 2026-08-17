@@ -73,3 +73,11 @@ exact metric deltas vs its baseline. Appended automatically by
 - **MaxDD:**  -8.2% → -8.2%  (-0.0%)
 - **Records:** book_d8_sector_rel
 - **Notes:** p=0.038
+
+### 2026-08-17 — D8 quiet-capitulation ordering (prefer low-turnover-spike oversold names)
+- **Source:** M1-Stage-A + TRUE shares data; liquidity-provision theory (informed vs pressure selling)
+- **Sharpe:** 2.781 → 2.868  (**+0.087**)
+- **CAGR:**   43.9% → 45.7%  (+1.7%)
+- **MaxDD:**  -8.2% → -7.4%  (+0.8%)
+- **Records:** book_d8_quiet
+- **Notes:** p=0.022, 5/5 perturbation cells positive; SUPERSEDES sector-rel (+0.019); 50/50 stack dilutes

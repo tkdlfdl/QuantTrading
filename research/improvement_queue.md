@@ -47,7 +47,8 @@ angle; unread papers and untested ideas come first).
 ### 40. D closing-auction entry tilt  [free; merges old #22]
 - **Spec:** shift D entries to closing auction (EOD loser rebound + cheapest venue).
 
-### 41. Wire sector-relative ranking into live replay_D  [adoption engineering]
+### 41. Wire QUIET-CAPITULATION ordering into live replay_D  [adoption engineering — UPDATED]
+- **NOTE:** quiet-turnover ordering (+0.087) superseded sector-rel (+0.019); wire quiet 5/60 spec (book_d8_quiet); needs daily turnover feed in settle.
 - **Spec:** PARAMS["D"]["rank"]="sector_rel" + sector_map.json means in replay_D;
   anchor: raw mode must reproduce current D; validate vs book_d8_sector_rel.
 
@@ -62,6 +63,11 @@ angle; unread papers and untested ideas come first).
 - **Spec:** capitulation entries within top-50 750h-momentum names, 40-120h holds.
 
 ## Done
+
+- **2026-08-17 | Queue #42/#43 — one ⭐⭐ adoption-grade find, one decisive validation**
+  #43 D-1997: mechanism requires intraday frequency (moat, not failure). #42:
+  QUIET-CAPITULATION ordering +0.087 p=0.022, 5/5 robust, supersedes sector-rel;
+  recorded book_d8_quiet; live wiring folded into #41.
 
 - **2026-08-17 | Mix-ideation M2/M5 — tested-no-gain (anchored)**
   top_n ensemble wash; F lookback blend drags. D-ensemble axes map complete.
