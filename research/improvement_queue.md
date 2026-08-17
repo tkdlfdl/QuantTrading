@@ -40,6 +40,14 @@ angle; unread papers and untested ideas come first).
 
 ## Done
 
+- **2026-08-17 | Cycle 15 | four new-book candidates — one find**
+  (ii) weekly x-asset reversal DEAD; (iv) credit regime no-gain; (i) sector
+  rotation 9/9 positive BUT redundant vs incubating Book X (corr 0.58, marginal
+  +0.003) — benched to prevent double-funding the ETF-momentum factor;
+  (iii) **D-uptrend sleeve: champ +0.046 @ p=0.010, robustness 3/3 — PENDING
+  DECISION: incubate or adopt as third D-family sleeve** (would lift D-complex
+  concentration; sector ETF panel cached as side benefit, unlocks queue #21).
+
 - **2026-08-17 | Book X deep grid (lb x hold) — spec confirmed**
   20/20 positive delta, 15/20 p<0.10; lookback axis reproduces the canonical
   momentum term structure (3m noise -> 12m peak -> 18m rolloff); hold cadence
