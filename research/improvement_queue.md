@@ -53,6 +53,13 @@ angle; unread papers and untested ideas come first).
 
 ## Done
 
+- **2026-08-17 | Data-unlock round (Cycle 21) — 2 permanent assets, 3 questions closed**
+  FOMC scrape rejected by own validation (honest block; #37 needs better source).
+  VIX term structure cached -> convexity FINALLY CLOSED (#124: UVXY bleeds in
+  all regimes incl. backwardation). Shares outstanding cached (523 names, 2015+)
+  -> MS retested with TRUE turnover: better (0.999) but corr 0.67 to F —
+  redundant, closed on the merits with the right variable.
+
 - **2026-08-17 | #39b/c D filters — battery CONCLUDED**
   MAX filter wash; gap filter significantly harmful (p=0.002). D-defense
   battery final score: sector-relative ranking adopted (⭐), 2 filters rejected.
