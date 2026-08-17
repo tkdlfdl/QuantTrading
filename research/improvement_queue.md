@@ -39,8 +39,6 @@ angle; unread papers and untested ideas come first).
 - **Spec:** PRE-REGISTERED single ridge-logistic on (sigma-day features) sizing
   C's trades 0/0.5/1 — the only sanctioned adaptivity; chronological CV.
 
-### 37. Pre-FOMC drift book  [needs FOMC calendar data]
-- **Spec:** long SPY 24h pre-FOMC announcement; data-engineer: FOMC dates 1997+.
 ### 39. D core defense: industry-adjusted reversal + 4 upgrades
 - **Spec:** sector-relative scores (merges old #21), gap-vs-intraday filter,
   vol-conditioned holds, MAX filter, PTH screen — one battery, anchor 2.740.
@@ -63,6 +61,23 @@ angle; unread papers and untested ideas come first).
 - **Spec:** capitulation entries within top-50 750h-momentum names, 40-120h holds.
 
 ## Done
+
+- **2026-08-17 | Cycle 22: BLOCKER RE-TACKLE — all three data blockers RESOLVED, zero adoptions**
+  (A) #37 FOMC: scrape v2 (meeting-anchored regex, last day of span) PASSED
+  validation 29/31 plausible years -> cached data/cache/fomc_dates.csv (232
+  dates 1997-2026, permanent). Announcement-day SPY book: Sharpe 0.19 /
+  CAGR 0.7% after costs (avg event day +0.19%, 8 days/yr exposure) — drift
+  exists but is too thin to be a book; post-2011 decay consistent with
+  Lucca-Moench literature. #37 CLOSED (tested, fails gates).
+  (B) VIX-TS last open angle: ^VIX9D>^VIX inversion tightening the vol target
+  HURTS at every level (10%: -0.069 p=0.071; 8%: -0.126 p=0.035 significantly
+  harmful; 12%: -0.025). Inversion days are exactly when D's capitulation
+  signals are richest — cutting exposure there fights the champion's engine.
+  VIX-TS thread now FULLY closed (UVXY unbuyable #124 + overlay angle dead).
+  (C) Shares-data harvest extension: quiet ordering on D14 sleeve improves
+  standalone (2.706 vs 2.665, anchor -0.000) but champion delta +0.036
+  p=0.175 — fails rule 4b. Quiet ordering stays D8-ONLY (simplifies #41
+  wiring: only the D8 sleeve changes).
 
 - **2026-08-17 | Queue #42/#43 — one ⭐⭐ adoption-grade find, one decisive validation**
   #43 D-1997: mechanism requires intraday frequency (moat, not failure). #42:
