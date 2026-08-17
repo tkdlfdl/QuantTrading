@@ -9,58 +9,26 @@ angle; unread papers and untested ideas come first).
 
 ## Queue
 
-### 34. Fix daily-panel adjustment-basis splices  [DATA — important]
-- **Spec:** prepare_data's daily extension appends hourly-basis closes onto the
-  historical daily panel -> phantom jumps for split/dividend stocks (DD +203%
-  6/22, DELL +213% 6/30 — both entered live Book A on phantom momentum).
-  Root fix: extend the daily panel from a consistent auto-adjusted daily
-  source (yfinance daily / DuckDB), rebase at the join, and re-audit the whole
-  panel for >100% 1-day moves. Interim: splice guard now in replay_A ranking.
-
-### 21. D sector-relative ranking tie-break  [Hameed-Mian 2015, #91]
-- **Spec:** keep raw score < -0.8 gate (beta bounce is part of the edge, #47);
-  rank eligible names by WITHIN-SECTOR score z instead of raw score. GICS-lite
-  sectors from static large-cap map.
-### 22. D end-of-day pressure entry tilt  [Baltussen et al. 2024, #92]
-- **Spec:** entries triggered in the final 2 bars deferred to next open vs
-  taken immediately — A/B on D8 sleeve.
-### 23. D path-composition diagnostic  [Barardehi 2026, #93 — analysis only]
-- **Spec:** decompose each D entry's trailing move into overnight/intraday/jump
-  components; measure rebound by cohort. Zero mining risk; informs #24.
-### 24. Sleeve assignment by reversal speed  [Dai et al. 2024 FAJ, #94]
-- **Spec:** route fast/rich oversold names to D8, slow/strong to D14 (replaces
-  identical selection in both sleeves). Test only if #23 shows cohort spread.
-
-### 26. D asymmetric entry/exit bands  [Blitz FAJ 2023, #97]
-- **Spec:** enter < -0.8, but exit only when score > -0.4 (lazy exit), DD-capped
-  at 21h max hold. Cuts re-entry churn.
-
-### 27. Book C meta-labeling filter  [Joubert 2022, #98]
-- **Spec:** PRE-REGISTERED single ridge-logistic on (sigma-day features) sizing
-  C's trades 0/0.5/1 — the only sanctioned adaptivity; chronological CV.
-
-### 39. D core defense: industry-adjusted reversal + 4 upgrades
-- **Spec:** sector-relative scores (merges old #21), gap-vs-intraday filter,
-  vol-conditioned holds, MAX filter, PTH screen — one battery, anchor 2.740.
-### 40. D closing-auction entry tilt  [free; merges old #22]
-- **Spec:** shift D entries to closing auction (EOD loser rebound + cheapest venue).
-
-### 41. Wire QUIET-CAPITULATION ordering into live replay_D  [adoption engineering — UPDATED]
-- **NOTE:** quiet-turnover ordering (+0.087) superseded sector-rel (+0.019); wire quiet 5/60 spec (book_d8_quiet); needs daily turnover feed in settle.
-- **Spec:** PARAMS["D"]["rank"]="sector_rel" + sector_map.json means in replay_D;
-  anchor: raw mode must reproduce current D; validate vs book_d8_sector_rel.
-
-### 42. M1-Stage-A: D ordering tie-break features  [8 pre-registered univariate A/Bs]
-- **Spec:** turnover spike (TRUE shares), 52wk distance, hour-of-day,
-  overnight-share, 750h momentum, +3 more — each as ordering tie-break via
-  anchored score-encode; sector-rel pattern. Ordering only, never skipping.
-### 43. M3 "D-1997": the D formula on daily bars  [28yr validation + new sleeve]
-- **Spec:** score = tanh(z of log-price vs 15d MA), buy <-0.8 top-20, hold 2-3d,
-  daily panel 1997+. Tests the core mechanism across 2000/2008/2018. Corr gate 0.5.
-### 44. M4 F-dip sleeve  [after DU decision]
+### 44. M4 F-dip sleeve  [after DU decision, ~mid-Oct incubation review]
 - **Spec:** capitulation entries within top-50 750h-momentum names, 40-120h holds.
 
 ## Done
+
+- **2026-08-17 | Cycle 23: QUEUE CLEARED — #41/#34 shipped, #23/#24/#26/#40/#27 verdicts, 0 adoptions**
+  ENGINEERING: #41 quiet ordering wired into live replay_D (D8 only; anchor
+  raw 1.662 unchanged, quiet 1.842 on live basis; fail-soft to raw). #34
+  daily-panel splices ROOT-FIXED: 24 phantom >100% moves repaired (rebased
+  adjusted refetch; 104 tickers had basis drift), sync_daily_close now
+  adjusted-source + per-ticker rebase + jump guard + completed-days-only.
+  RESEARCH (all anchored EXACTLY after finding the engine's one-way-TC
+  convention; prior #26 VOID resolved): #23 diagnostic — cohorts real
+  (deepest rebound hardest; gap-heavy slower), unlocked #24; #24 routing
+  fails both ways (averaging-beats-adaptation, 6th confirmation); #26 lazy
+  exits lose everywhere; #40 defer-to-open SIGNIFICANTLY HARMFUL (-0.213
+  p=0.001 — the first hours ARE the rebound); #27 C meta-labeling harmful
+  (-0.244 p=0.095, 175 trades ever = nothing learnable). Registry #131-134.
+  Queue is now EMPTY except #44 (gated on DU decision, mid-Oct). Stale
+  merged items (#21/#22/#39 dups) removed.
 
 - **2026-08-17 | Cycle 22: BLOCKER RE-TACKLE — all three data blockers RESOLVED, zero adoptions**
   (A) #37 FOMC: scrape v2 (meeting-anchored regex, last day of span) PASSED
