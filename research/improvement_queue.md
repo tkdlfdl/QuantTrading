@@ -14,13 +14,15 @@ angle; unread papers and untested ideas come first).
   intermittently rate-limited. Retry off-hours; then run
   cycle24_earnings_premium.py (Frazzini-Lamont gates pre-registered).
 
-### 48. F-dip incubation decision  [HUMAN-GATED — pending]
-- **Spec:** book_fdip_40h (⭐ #140: full-stack +0.035 p=0.029, 9/9 robust,
-  verifier PASS) is an incubation candidate. Original #44 ordering: decide
-  alongside/after the DU review (~mid-Oct) since both extend the D-mechanism
-  family. Wiring cost is small (DU-style mask in replay_D + hold=40).
-
 ## Done
+
+- **2026-08-17 | #48 F-dip incubation STARTED (user decision) — 4th incubator live**
+  Book FD wired: PARAMS["FD"] (mom_mask_top=50/750h, hold=40, raw ordering),
+  replay_D mask branch, replay_all/BOOKS/eod flow-through. D8 anchor 1.836
+  (pre-edit 1.842, cache drift, within tolerance). Settle-basis baseline
+  book_fd_live_spec 2.209/-14.9% (verifier PASS). FD_INCUBATION_START
+  2026-08-18, 60 trading days, zero weight (not in ALLOC_BOOKS). Review
+  lands with G/X/DU (~mid-Oct/Nov).
 
 - **2026-08-17 | Cycle 26: queue cleared again — F-DIP ⭐ find + 3 data assets + index-rebal FULLY closed**
   #44 F-dip: +0.035 p=0.029 on FULL stack, 9/9 perturbation, verifier PASS

@@ -49,7 +49,7 @@ NAN_MAX          = 0.30          # drop tickers with >30% NaN (per-book where re
 
 # ── Books ───────────────────────────────────────────────────────────
 # Individual strategy books + derived portfolios.
-BOOKS = ["A", "B", "C", "D", "E", "F", "G", "X", "DU"]
+BOOKS = ["A", "B", "C", "D", "E", "F", "G", "X", "DU", "FD"]
 # Books eligible for CHAMPION (IvolVT) capital — audit + promotion decisions:
 #   B dropped  : honest Sharpe 0.775, ~zero marginal portfolio contribution (2026-08-15)
 #   E excluded : audit Sharpe 0.63 full-history; sentiment feed stale since 2026-06
@@ -86,6 +86,13 @@ X_INCUBATION_DAYS  = 60
 #                robustness 3/3 monotone. Zero weight until review.
 DU_INCUBATION_START = "2026-08-18"
 DU_INCUBATION_DAYS  = 60
+
+# FD: F-dip sleeve — capitulation entries within top-50 750h-momentum names,
+# 40h harvest (registry #140: full-stack +0.035 p=0.029, 9/9 perturbation,
+# book_fdip_40h). Zero-weight incubation started 2026-08-18 (user decision
+# #48, 2026-08-17).
+FD_INCUBATION_START = "2026-08-18"
+FD_INCUBATION_DAYS  = 60
 # ── Re-baseline + rollback calibration (2026-08-17, post-mortem #35) ──
 # Track record re-baselined: inception 2026-08-18 (prior record measured 4
 # engine defects, archived in live/state/archive_incident_2026-08/).
@@ -109,6 +116,7 @@ BOOK_LABELS = {
     "G": "Overnight-Share Cross-Section (INCUBATING)",
     "X": "Cross-Asset ETF Momentum (INCUBATING)",
     "DU": "Contrarian Dips-in-Uptrends (INCUBATING)",
+    "FD": "F-Dip — Capitulation in Top-Momentum Names (INCUBATING)",
     "FixedEW": "Fixed Equal-Weight Portfolio",
     "MomAlloc": "Momentum-Allocation Portfolio",
     "IvolVT": "Champion: Inverse-Vol + 15% Vol-Target (A/C/D/F, D=2-sleeve blend)",
@@ -178,6 +186,16 @@ PARAMS = {
     "DU": dict(
         bubble_ma_hours=104, threshold=-0.8,
         hold_hours=8, top_n=20, mom_filter_days=126,
+        tc_one_way=TC_ONE_WAY,
+    ),
+    # FD: F-dip — INCUBATING. Same signal/costs as D but the eligible set is
+    # masked to the top-50 names by trailing 750h momentum (F's ranking), and
+    # the harvest horizon is 40h (alpha decays by 80h, registry #140). RAW
+    # ordering — quiet was validated on the D8 sleeve only.
+    "FD": dict(
+        bubble_ma_hours=104, threshold=-0.8,
+        hold_hours=40, top_n=20,
+        mom_mask_top=50, mom_mask_hours=750,
         tc_one_way=TC_ONE_WAY,
     ),
     # D14: INTERNAL sleeve params for blended Book D (not a standalone book).

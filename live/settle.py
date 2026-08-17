@@ -101,6 +101,13 @@ def replay_D(panels, book="D"):
         mom_bars = int(p["mom_filter_days"]) * 7
         mom = hc.pct_change(mom_bars).values
         bub = np.where(mom > 0, bub, 0.0)
+    if p.get("mom_mask_top"):
+        # FD sleeve: eligible set = top-N names by trailing momentum (F's
+        # ranking, lagged 1 bar) — "buy the dip in the strongest names"
+        # (registry #140, book_fdip_40h).
+        mom = hc.pct_change(int(p.get("mom_mask_hours", 750))).shift(1)
+        mrank = mom.rank(axis=1, ascending=False)
+        bub = np.where((mrank <= int(p["mom_mask_top"])).values, bub, 0.0)
     if p.get("rank") == "quiet":
         try:
             enc = _quiet_encode(panels, bub, p["threshold"], p)
@@ -534,13 +541,14 @@ def replay_all(panels):
     rG, posG, _   = replay_G(panels)
     rX, posX, _   = replay_X(panels)
     rDU, posDU, clDU = replay_D(panels, book="DU")
+    rFD, posFD, clFD = replay_D(panels, book="FD")
 
     book_rets = pd.DataFrame(
         {"A": rA, "B": rB, "C": rC, "D": rD, "E": rE, "F": rF, "G": rG,
-         "X": rX, "DU": rDU}
+         "X": rX, "DU": rDU, "FD": rFD}
     ).sort_index()
     positions = {"A": [], "B": posB, "C": [], "D": posD, "E": [], "F": posF,
-                 "G": posG, "X": posX, "DU": posDU}
+                 "G": posG, "X": posX, "DU": posDU, "FD": posFD}
     closed = clB + clD + clF
     trades_df = pd.DataFrame(closed) if closed else pd.DataFrame(
         columns=["book", "ticker", "side", "entry_ts", "exit_ts", "entry_px", "exit_px", "ret"])
