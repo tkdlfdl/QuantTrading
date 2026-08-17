@@ -53,6 +53,12 @@ angle; unread papers and untested ideas come first).
 
 ## Done
 
+- **2026-08-17 | #39b/c D filters — battery CONCLUDED**
+  MAX filter wash; gap filter significantly harmful (p=0.002). D-defense
+  battery final score: sector-relative ranking adopted (⭐), 2 filters rejected.
+  Queue now: #37 (FOMC data), #40/#41 (engine work), #23/#24/#26/#27 (careful
+  D/C work) — all Saturday-cycle material. No untested quick candidates remain.
+
 - **2026-08-17 | #39a industry-adjusted D8 — IMPROVED ⭐ + ALL-IN computed**
   Sector map downloaded (permanent: sector_map.json). Adjusted D8: 2.808
   standalone, champion 2.800 (+0.019 p=0.038), perturbation 4/6. ALL-IN
