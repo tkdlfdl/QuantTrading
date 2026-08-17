@@ -44,6 +44,45 @@ def _daily_infra(idx, prices):
 # ─────────────────────────────────────────────────────────────────────
 # BOOK D — Contrarian Bubble (MA=104h, thr=-0.8, hold=13h, top=20)
 # ─────────────────────────────────────────────────────────────────────
+def _quiet_encode(panels, bub, thr, p):
+    """QUIET-CAPITULATION score encode (registry #127, validated as
+    book_d8_quiet): among names past the raw -0.8 gate, re-encode the score as
+    -0.81 + rank*0.09 where rank = clipped z of log(5d/60d turnover ratio),
+    lagged one day. The engine's nsmallest pick then prefers LOW-spike
+    (informed-selling) capitulations; the raw gate is computed first so
+    ineligible names never enter.
+
+    Returns the encoded score matrix, or None if the turnover feed is
+    unavailable (caller falls back to raw ordering).
+    """
+    import duckdb
+    tickers, idx = panels["tickers"], panels["idx_h"]
+    if not C.SHARES_OUTSTANDING.exists():
+        return None
+    con = duckdb.connect(str(C.SENTIMENT_DB), read_only=True)
+    try:
+        vol = con.execute(
+            "SELECT ts, symbol, volume FROM ohlcv WHERE interval='1d' "
+            "AND ts >= '2018-06-01'").df()
+    finally:
+        con.close()
+    if vol.empty:
+        return None
+    vol["ts"] = pd.to_datetime(vol["ts"])
+    V = vol.pivot_table(index="ts", columns="symbol", values="volume").sort_index()
+    shares = pd.read_parquet(C.SHARES_OUTSTANDING)
+    to = V / shares.reindex(V.index).ffill()
+    spike, base = int(p["quiet_spike_days"]), int(p["quiet_base_days"])
+    z = (to.rolling(spike).mean() / to.rolling(base).mean()).shift(1)
+    zl = np.log(z.clip(0.1, 10.0))
+    f = zl.reindex(columns=tickers).reindex(idx.normalize()).values
+    sd = np.nanstd(f)
+    if not np.isfinite(sd) or sd < 1e-9:
+        return None
+    rank = np.clip(np.nan_to_num(f / sd, nan=0.0), -1.0, 1.0)
+    return np.where(bub < thr, -0.81 + rank * 0.09, 0.0)
+
+
 def replay_D(panels, book="D"):
     """Contrarian bubble replay. book="D" (hold 8h) or "D14" (hold 14h sleeve,
     promoted 2026-08-16: champion 2.580 -> 2.781 with both sleeves)."""
@@ -62,6 +101,16 @@ def replay_D(panels, book="D"):
         mom_bars = int(p["mom_filter_days"]) * 7
         mom = hc.pct_change(mom_bars).values
         bub = np.where(mom > 0, bub, 0.0)
+    if p.get("rank") == "quiet":
+        try:
+            enc = _quiet_encode(panels, bub, p["threshold"], p)
+        except Exception as e:
+            enc = None
+            print(f"  [settle] quiet-rank feed failed ({e}); falling back to raw ordering")
+        if enc is not None:
+            bub = enc
+        else:
+            print(f"  [settle] Book {book}: quiet ordering unavailable -> raw ordering")
     tdays, bdi, day_last, day_first, dret = _daily_infra(idx, prices)
 
     warmup = p["bubble_ma_hours"] + 1

@@ -27,6 +27,7 @@ MERGED_HOURLY_CLOSE = CACHE_DIR / "merged_hourly_close.parquet"
 MERGED_HOURLY_OPEN  = CACHE_DIR / "merged_hourly_open.parquet"
 DAILY_CLOSE         = CACHE_DIR / "daily_close_extended_1997_2026.parquet"
 QQQ_HOURLY_CLOSE    = CACHE_DIR / "qqq_hourly_close.parquet"
+SHARES_OUTSTANDING  = CACHE_DIR / "shares_outstanding.parquet"
 
 # State files
 META_FILE      = STATE_DIR / "meta.json"
@@ -158,10 +159,17 @@ PARAMS = {
         phase1_hold_hours=1, flip_hold_days=3,
         tc_per_phase=TC_ONE_WAY, short_borrow_ann=SHORT_BORROW_ANN,
     ),
-    # D: Contrarian bubble — buy deeply depressed stocks
+    # D: Contrarian bubble — buy deeply depressed stocks.
+    # rank="quiet": QUIET-CAPITULATION ordering (registry #127, champion +0.087
+    # p=0.022, 5/5 perturbation) — among gate-eligible names prefer LOW
+    # turnover-spike (5d/60d turnover ratio, TRUE shares outstanding).
+    # D8 sleeve only — quiet on D14 failed rule 4b (+0.036 p=0.175, #130).
+    # Fail-soft: if the turnover feed is unavailable, settle falls back to raw
+    # score ordering (the pre-quiet behavior) and logs a warning.
     "D": dict(
         bubble_ma_hours=104, threshold=-0.8,
         hold_hours=8, top_n=20,
+        rank="quiet", quiet_spike_days=5, quiet_base_days=60,
         tc_one_way=TC_ONE_WAY,
     ),
     # DU: D x momentum double-sort — INCUBATING third D-family sleeve.
