@@ -9,32 +9,30 @@ angle; unread papers and untested ideas come first).
 
 ## Queue
 
-### 44. M4 F-dip sleeve  [after DU decision, ~mid-Oct incubation review]
-- **Spec:** capitulation entries within top-50 750h-momentum names, 40-120h holds.
-
-### 45. NDX membership history acquisition  [DATA — unblocks index-rebal reverse side]
-- **Spec:** scrape Nasdaq annual reconstitution press releases (2008-2025) to
-  build NDX membership through time. Unblocks: (a) "S&P member added to NDX"
-  event study; (b) December reconstitution prediction (mkt-cap rank vs
-  smallest member — shares_outstanding.parquet x price gives cap history);
-  (c) exact historical dual-index flags for the #139 migration cohort.
-  Note: live Wikipedia NDX constituents table is GONE (universe scraper
-  falls back to cache); pinned-revision workaround documented in cycle25.
-
-### 46. Earnings-calendar acquisition retry  [DATA — throttled 2026-08-17]
-- **Spec:** fetch_earnings_dates.py is checkpoint/resume-ready; per-ticker
-  yfinance earnings endpoint was hard rate-limited (batch chart endpoint
-  unaffected). Retry off-hours / lower frequency; then run
+### 46. Earnings-calendar acquisition retry  [DATA — resumable]
+- **Spec:** fetch_earnings_dates.py is checkpoint/resume-ready; endpoint
+  intermittently rate-limited. Retry off-hours; then run
   cycle24_earnings_premium.py (Frazzini-Lamont gates pre-registered).
 
-### 47. S&P announcement-date acquisition  [DATA — the only live index-rebal angle]
-- **Spec:** #139 killed all post-effective-date variants; literature edge is
-  announcement->effective (5-10 day window). Source: S&P DJI press-release
-  archive (spglobal.com news; dates only, no paywall content needed).
-  If acquired: front-run test on adds AND the dual-index migration cohort
-  (which showed the STRONGEST post-effective decay = most pre-priced).
+### 48. F-dip incubation decision  [HUMAN-GATED — pending]
+- **Spec:** book_fdip_40h (⭐ #140: full-stack +0.035 p=0.029, 9/9 robust,
+  verifier PASS) is an incubation candidate. Original #44 ordering: decide
+  alongside/after the DU review (~mid-Oct) since both extend the D-mechanism
+  family. Wiring cost is small (DU-style mask in replay_D + hold=40).
 
 ## Done
+
+- **2026-08-17 | Cycle 26: queue cleared again — F-DIP ⭐ find + 3 data assets + index-rebal FULLY closed**
+  #44 F-dip: +0.035 p=0.029 on FULL stack, 9/9 perturbation, verifier PASS
+  (book_fdip_40h) — first stack-clearing new sleeve since DU; incubation
+  decision = #48 (human-gated, with DU review). #45 NDX membership:
+  8 snapshots 2019-2026 cached (pre-2018 impossible via Wikipedia — never
+  tabulated); reverse migration REJECTED (cohorts identical). #47
+  announcements: 199 releases cached via press.spglobal.com pager; front-run
+  window -0.07 -> index effect dead at EVERY window, thread closed forever
+  (#142). Lit sweep: intramonth momentum cycle diagnostic NEGATIVE on our
+  books (F pre-ToM is its worst window); ToM SPY real but 0.45 << bar.
+  #46 (earnings) still in flight. Registry #140-143.
 
 - **2026-08-17 | Cycle 23: QUEUE CLEARED — #41/#34 shipped, #23/#24/#26/#40/#27 verdicts, 0 adoptions**
   ENGINEERING: #41 quiet ordering wired into live replay_D (D8 only; anchor
