@@ -332,7 +332,12 @@ def replay_F(panels):
     last_bar = T - 1
 
     i = warmup
-    while i + hold_h < T:
+    # F-FLAT FIX (2026-08-17 post-mortem): the old guard `i + hold_h < T`
+    # refused to OPEN the final partial 200h block, so the live window (which
+    # sits inside that tail block) kept Book F structurally flat since
+    # inception while ivol max-weighted its zero-vol series. Open the tail
+    # block too; positions are simply marked open at the panel end.
+    while i < T - 1:
         row   = mom[i]
         valid = np.where(np.isfinite(row) & (row != 0)
                          & ~(jump[i] > 1.0))[0]

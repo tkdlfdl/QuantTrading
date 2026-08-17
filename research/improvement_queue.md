@@ -9,19 +9,6 @@ angle; unread papers and untested ideas come first).
 
 ## Queue
 
-### 35. POST-MORTEM: live rollback breach 2026-08-17  [TOP PRIORITY — blocks all candidate work]
-- **Spec:** live IvolVT drawdown -28.4% max / -19.3% current vs -11.1% bound —
-  rollback rule FIRED (see live/state/incident_20260817_rollback.md; LIVE_BOOK
-  revert is PENDING HUMAN DECISION per hard rails). Post-mortem must fix and
-  verify: (a) settle pipeline stalled since 2026-07-08 (NASDAQ-100 Wikipedia
-  scrape aborts hourly refresh + Book E sentiment refresh); (b) Book F flatline
-  — largest ivol weight (0.628) yet n_pos=0 since inception; (c) EOD
-  attribution anomalies (07-06 gross 328%, 07-23 day_pnl == equity, frozen
-  sharpe_itd/maxdd_itd columns); (d) then catch up settles through current and
-  re-evaluate the rollback rule on clean data. Relates to #34 (splice root fix)
-  and #33 (settle-basis bound recalibration).
-- **Source:** Cycle 18 MONITOR breach (incident report), 2026-08-17.
-
 ### 34. Fix daily-panel adjustment-basis splices  [DATA — important]
 - **Spec:** prepare_data's daily extension appends hourly-basis closes onto the
   historical daily panel -> phantom jumps for split/dividend stocks (DD +203%
@@ -60,6 +47,16 @@ angle; unread papers and untested ideas come first).
   C's trades 0/0.5/1 — the only sanctioned adaptivity; chronological CV.
 
 ## Done
+
+- **2026-08-17 | #35 POST-MORTEM (rollback breach) — CLOSED, strategy exonerated**
+  -28.4% live DD fully attributed to 4 engine defects: (1) replay_F tail-block
+  guard kept F structurally flat since inception; (2) flat F -> zero vol -> ivol
+  max-weighted it 62.8% (the Book-H cash-drag artifact, in production); (3) A
+  held phantom-splice picks (DD/DELL); (4) data starvation since 7/8. ALL FIXED
+  AND VERIFIED: F invested 48/48 days at sane 5.8% weight, guards in A/F/G,
+  pipeline self-healing. Fixed-engine replay of the same window: -5.8% vs the
+  broken engine's -28.4%. RECOMMENDATION: re-baseline IvolVT (option b) —
+  reset track-record inception; rollback to FixedEW NOT indicated.
 
 - **2026-08-17 | Cycle 17 | new data + 3 strategies — all no-gain vs full stack**
   Permanent data adds: yields_daily.parquet (1995+), etf_extended_close.parquet
