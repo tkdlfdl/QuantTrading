@@ -40,6 +40,12 @@ angle; unread papers and untested ideas come first).
 
 ## Done
 
+- **2026-08-17 | Book X deep grid (lb x hold) — spec confirmed**
+  20/20 positive delta, 15/20 p<0.10; lookback axis reproduces the canonical
+  momentum term structure (3m noise -> 12m peak -> 18m rolloff); hold cadence
+  flat 21-63d. Incubating spec (252d/monthly) = plateau center; no change.
+  Cumulative robustness 32/32 cells across both grids.
+
 - **2026-08-17 | Cross-asset ETF momentum (Book X) — INCUBATING**
   New data (15 ETFs cached 2002+) unlocked first non-single-stock book.
   12/12 perturbation cells positive; +0.115 p=0.034 @0.25 shares; positive in
