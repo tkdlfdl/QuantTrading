@@ -40,6 +40,15 @@ angle; unread papers and untested ideas come first).
 
 ## Done
 
+- **2026-08-16 | Appraisal-sizing round | Overnight-share (Book G candidate) — PASSES**
+  User-driven relaxation (less-correlated, not orthogonal) -> Treynor-Black bar:
+  Sharpe > corr x 2.79. G: standalone 0.988, corr 0.13, bar 0.37. At 0.25 ivol
+  shares: champion 2.788 -> 2.852 (+0.070); robustness **27/27 cells positive**
+  (23/27 p<0.10 individually). Earlier bench = full-slot sizing artifact.
+  Breadth-H re-tested under both methods: genuinely benched. Contribution test
+  amended (backtest agent 4b). **PENDING HUMAN DECISION: Phase-2 incubation of
+  Book G (zero-weight settle tracking, 60 trading days) before capital.**
+
 - **2026-08-16 | Cycle 14 | Orthogonal program #28-32 — ALL tested-no-gain (structural)**
   Carry study: UVXY bleed -1.08%/d in calm, +0.92%/d when VIX rising. Convexity
   book paid +0.88%/d on stress days but carry killed the portfolio delta

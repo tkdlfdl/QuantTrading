@@ -213,6 +213,12 @@ the portfolio-contribution test before any adoption recommendation:
 4. **Not worth adding** = portfolio does not improve, regardless of how good
    the strategy looks standalone (high correlation to existing books usually
    explains it — report the correlations). Bench it; record the test anyway.
+4b. **Appraisal-sized allocation (amended 2026-08-16):** a less-correlated
+   candidate (corr < ~0.4) adds value iff standalone Sharpe > corr x champion
+   Sharpe (Treynor-Black) — but ONLY at small allocations. Test at fractional
+   ALLOC_SHARES (0.25 and 0.5) as well as a full slot; a candidate that fails
+   at full slot but passes small-and-robust (perturbation grid + LW p<0.10)
+   is a valid adoption case. Full-slot-only testing wrongly benched Book G.
 5. Record the with-strategy portfolio series (`portfolio_champion_plus_<name>`)
    and log the outcome in the improvements ledger (if improved) or the registry
    notes (if benched).
