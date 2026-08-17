@@ -48,7 +48,7 @@ NAN_MAX          = 0.30          # drop tickers with >30% NaN (per-book where re
 
 # ── Books ───────────────────────────────────────────────────────────
 # Individual strategy books + derived portfolios.
-BOOKS = ["A", "B", "C", "D", "E", "F"]
+BOOKS = ["A", "B", "C", "D", "E", "F", "G"]
 # Books eligible for CHAMPION (IvolVT) capital — audit + promotion decisions:
 #   B dropped  : honest Sharpe 0.775, ~zero marginal portfolio contribution (2026-08-15)
 #   E excluded : audit Sharpe 0.63 full-history; sentiment feed stale since 2026-06
@@ -59,8 +59,16 @@ BOOKS = ["A", "B", "C", "D", "E", "F"]
 #                two-cohort risk budget — validated identical to separate books
 #                (corr 0.9996). Do NOT reduce to one share: that reverts the
 #                gain (-0.20 Sharpe, p=0.004 — tested 2026-08-16).
+#   G INCUBATING: overnight-share cross-section (LPS 2019), added 2026-08-16
+#                at ZERO champion weight for a 60-trading-day Phase-2 incubation.
+#                Backtest case: standalone 1.05 (top-7), corr 0.13 to champion;
+#                at 0.25 ALLOC_SHARES champion 2.788 -> ~2.85 (+0.07, 32/32
+#                perturbation cells positive). Promotion to 0.25 shares is
+#                MECHANICAL after clean tracking + human sign-off.
 # B and E keep running as paper track records; they receive no champion capital.
 ALLOC_BOOKS = ["A", "C", "D", "F"]
+G_INCUBATION_START = "2026-08-17"    # first settle date of the incubation window
+G_INCUBATION_DAYS  = 60              # trading days before promotion review
 ALLOC_SHARES = {"D": 2.0}   # blended D = two cohort shares in inverse-vol weighting
 PORTFOLIOS = ["FixedEW", "MomAlloc", "IvolVT"]
 ALL_BOOKS = BOOKS + PORTFOLIOS
@@ -72,6 +80,7 @@ BOOK_LABELS = {
     "D": "Contrarian Bubble Score",
     "E": "Reddit Sentiment Long-Only",
     "F": "Universe Hourly Momentum Long",
+    "G": "Overnight-Share Cross-Section (INCUBATING)",
     "FixedEW": "Fixed Equal-Weight Portfolio",
     "MomAlloc": "Momentum-Allocation Portfolio",
     "IvolVT": "Champion: Inverse-Vol + 15% Vol-Target (A/C/D/F, D=2-sleeve blend)",
@@ -142,6 +151,14 @@ PARAMS = {
         lookback_hours=750,   # 750h / 7 bars/day = 107 trading days (~5 months)
         hold_hours=200,       # 200h / 7 bars/day =  29 trading days (~6 weeks)
         top_n=5,
+        tc_one_way=TC_ONE_WAY,
+    ),
+    # G: Overnight-share cross-section (Lou-Polk-Skouras 2019) — INCUBATING.
+    # Rank by trailing 252d (overnight - intraday) return spread; long top-7,
+    # 21-trading-day holds, non-overlapping. Spec chosen mid-plateau (top-7 =
+    # standalone Sharpe peak, NOT the p-argmax) per anti-selection rules.
+    "G": dict(
+        spread_window_days=252, hold_days=21, top_n=7, min_names=50,
         tc_one_way=TC_ONE_WAY,
     ),
     # E: Reddit sentiment long-only — buy capitulation + moderate hype (no shorts)

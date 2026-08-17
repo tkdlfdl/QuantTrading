@@ -130,3 +130,8 @@ timestamp,name,check,verdict,detail
 2026-08-16T22:27:17+00:00,book_d_blend,C3-metrics,PASS,recomputed metrics match history.json
 2026-08-16T22:27:17+00:00,book_d_blend,C4-integrity,PASS,"n=1674, zero-days 10%, max |ret| 4.9%"
 2026-08-16T22:27:17+00:00,book_d_blend,OVERALL,PASS,4/3 checks clean
+2026-08-17T00:45:44+00:00,book_g_live_spec,C1-sign,PASS,"Sharpe 0.91, total 450.04% — signs consistent"
+2026-08-17T00:45:44+00:00,book_g_live_spec,C2-maxdd,PASS,MaxDD -48.64% over 1805 days
+2026-08-17T00:45:44+00:00,book_g_live_spec,C3-metrics,PASS,recomputed metrics match history.json
+2026-08-17T00:45:44+00:00,book_g_live_spec,C4-integrity,PASS,"n=1805, zero-days 3%, max |ret| 14.2%"
+2026-08-17T00:45:44+00:00,book_g_live_spec,OVERALL,PASS,4/3 checks clean

@@ -349,6 +349,67 @@ def replay_F(panels):
 
 
 # ─────────────────────────────────────────────────────────────────────
+# BOOK G — Overnight-Share Cross-Section (INCUBATING; zero champion weight)
+# ─────────────────────────────────────────────────────────────────────
+def replay_G(panels):
+    """Overnight-share cross-section — INCUBATING. Rank by trailing 252d
+    (overnight - intraday) return spread; long top-7, 21-trading-day holds.
+
+    DATA BASIS IS CRITICAL (validated 2026-08-16): the signal requires OFFICIAL
+    daily open prices from DuckDB. Hourly-panel first-bar opens destroy the
+    edge (Sharpe 0.19 vs 0.77 — IEX-era opens too noisy for the open-auction
+    microstructure this strategy harvests). Requires nightly daily-OHLCV
+    refresh (prepare_data.refresh_daily_ohlcv)."""
+    p = C.PARAMS["G"]
+    import duckdb
+    con = duckdb.connect(str(C.SENTIMENT_DB), read_only=True)
+    px = con.execute(
+        "SELECT ts, symbol, open, close FROM ohlcv WHERE interval='1d' AND ts >= '2018-06-01'"
+    ).df()
+    con.close()
+    px["ts"] = pd.to_datetime(px["ts"])
+    close = px.pivot_table(index="ts", columns="symbol", values="close").sort_index()
+    openp = px.pivot_table(index="ts", columns="symbol", values="open").sort_index()
+    ret1d = close.pct_change()
+    spread_r = (openp/close.shift(1) - 1) - (close/openp - 1)
+    # splice guard (BNY-type ticker reuse shows up as a giant overnight jump)
+    jump = ret1d.abs().rolling(p["spread_window_days"], min_periods=1).max().shift(1)
+    sp = spread_r.rolling(p["spread_window_days"], min_periods=p["spread_window_days"]).sum().shift(1)
+    sp = sp.mask(jump > 1.0)
+
+    dates = close.index
+    n = len(dates)
+    hold, top_n = p["hold_days"], p["top_n"]
+    tc_rt = 2 * p["tc_one_way"]
+    rows, open_positions = [], []
+    i = p["spread_window_days"] + 5
+    while i + 1 < n:
+        d = dates[i]
+        srow = sp.loc[d].dropna()
+        if len(srow) >= p["min_names"]:
+            picks = list(srow.nlargest(top_n).index)
+            end = min(i + hold, n)
+            fwd = ret1d.iloc[i:end][picks]
+            pr = fwd.mean(axis=1).fillna(0.0)
+            pr.iloc[0] -= tc_rt
+            for dt, x in pr.items():
+                rows.append((dt, float(x)))
+            if end >= n - 1:
+                for tick in picks:
+                    open_positions.append(dict(book="G", ticker=tick, side=1,
+                                               entry_ts=str(d), exit_ts="open",
+                                               entry_px=float(close.loc[d, tick]),
+                                               exit_px=float(close[tick].iloc[-1])))
+            i = end
+        else:
+            rows.append((dates[i], 0.0))
+            i += 1
+    ser = pd.Series(dict(rows)).sort_index()
+    ser = ser[~ser.index.duplicated(keep="last")]
+    return ser, open_positions, []
+
+
+# ─────────────────────────────────────────────────────────────────────
 # REPLAY ALL BOOKS
 # ─────────────────────────────────────────────────────────────────────
 def replay_all(panels):
@@ -366,11 +427,13 @@ def replay_all(panels):
     clD = clD8 + clD14
     rE, _, _      = replay_E(panels)
     rF, posF, clF = replay_F(panels)
+    rG, posG, _   = replay_G(panels)
 
     book_rets = pd.DataFrame(
-        {"A": rA, "B": rB, "C": rC, "D": rD, "E": rE, "F": rF}
+        {"A": rA, "B": rB, "C": rC, "D": rD, "E": rE, "F": rF, "G": rG}
     ).sort_index()
-    positions = {"A": [], "B": posB, "C": [], "D": posD, "E": [], "F": posF}
+    positions = {"A": [], "B": posB, "C": [], "D": posD, "E": [], "F": posF,
+                 "G": posG}
     closed = clB + clD + clF
     trades_df = pd.DataFrame(closed) if closed else pd.DataFrame(
         columns=["book", "ticker", "side", "entry_ts", "exit_ts", "entry_px", "exit_px", "ret"])

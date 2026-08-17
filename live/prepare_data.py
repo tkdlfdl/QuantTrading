@@ -75,8 +75,55 @@ def latest_complete_date() -> pd.Timestamp:
 def prepare(refresh: bool = True, verbose: bool = True) -> pd.Timestamp:
     if refresh:
         refresh_hourly(verbose=verbose)
+        refresh_daily_ohlcv(verbose=verbose)
         sync_daily_close(verbose=verbose)
     last = latest_complete_date()
     if verbose:
         print(f"  [prepare] latest complete trading date in cache: {last.date()}")
     return last
+
+
+def refresh_daily_ohlcv(verbose=True, lookback_days=14) -> bool:
+    """Refresh DuckDB daily OHLCV (needed by Book G — official open prices).
+    Batch-downloads the last `lookback_days` of daily bars for the cached
+    universe via yfinance and upserts rows not already present."""
+    try:
+        import yfinance as yf, duckdb
+        import pandas as _pd
+        from datetime import datetime, timedelta
+        from data.universe import get_cached_universe
+        univ = get_cached_universe()
+        if not univ:
+            return False
+        start = (datetime.now() - timedelta(days=lookback_days)).strftime("%Y-%m-%d")
+        raw = yf.download(univ, start=start, interval="1d", auto_adjust=True,
+                          progress=False, group_by="ticker", threads=True)
+        rows = []
+        for t in univ:
+            try:
+                df = raw[t].dropna(subset=["Close"])
+            except Exception:
+                continue
+            for ts, r in df.iterrows():
+                rows.append((_pd.Timestamp(ts).to_pydatetime(), t, "1d",
+                             float(r["Open"]), float(r["High"]), float(r["Low"]),
+                             float(r["Close"]), float(r.get("Volume", 0) or 0)))
+        if not rows:
+            return False
+        con = duckdb.connect(str(C.SENTIMENT_DB))
+        con.register("_stage", _pd.DataFrame(rows,
+            columns=["ts","symbol","interval","open","high","low","close","volume"]))
+        con.execute("""
+            INSERT INTO ohlcv
+            SELECT s.* FROM _stage s
+            LEFT JOIN ohlcv o ON o.ts = s.ts AND o.symbol = s.symbol AND o.interval = s.interval
+            WHERE o.ts IS NULL
+        """)
+        con.close()
+        if verbose:
+            print(f"  [prepare] daily OHLCV refreshed ({len(rows)} candidate rows).")
+        return True
+    except Exception as e:
+        if verbose:
+            print(f"  [prepare] daily OHLCV refresh failed: {e}")
+        return False
