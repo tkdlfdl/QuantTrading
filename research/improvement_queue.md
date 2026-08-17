@@ -51,7 +51,21 @@ angle; unread papers and untested ideas come first).
 - **Spec:** PARAMS["D"]["rank"]="sector_rel" + sector_map.json means in replay_D;
   anchor: raw mode must reproduce current D; validate vs book_d8_sector_rel.
 
+### 42. M1-Stage-A: D ordering tie-break features  [8 pre-registered univariate A/Bs]
+- **Spec:** turnover spike (TRUE shares), 52wk distance, hour-of-day,
+  overnight-share, 750h momentum, +3 more — each as ordering tie-break via
+  anchored score-encode; sector-rel pattern. Ordering only, never skipping.
+### 43. M3 "D-1997": the D formula on daily bars  [28yr validation + new sleeve]
+- **Spec:** score = tanh(z of log-price vs 15d MA), buy <-0.8 top-20, hold 2-3d,
+  daily panel 1997+. Tests the core mechanism across 2000/2008/2018. Corr gate 0.5.
+### 44. M4 F-dip sleeve  [after DU decision]
+- **Spec:** capitulation entries within top-50 750h-momentum names, 40-120h holds.
+
 ## Done
+
+- **2026-08-17 | Mix-ideation M2/M5 — tested-no-gain (anchored)**
+  top_n ensemble wash; F lookback blend drags. D-ensemble axes map complete.
+  M1-A/M3/M4 queued (#42-44).
 
 - **2026-08-17 | #26/#23 attempt — VOIDED (harness, not verdicts)**
   #26 asym-bands custom loop produced -0.333 vs 2.740 WITHOUT an anchor run —
