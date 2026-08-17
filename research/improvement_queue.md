@@ -39,6 +39,20 @@ angle; unread papers and untested ideas come first).
 - **Spec:** PRE-REGISTERED single ridge-logistic on (sigma-day features) sizing
   C's trades 0/0.5/1 — the only sanctioned adaptivity; chronological CV.
 
+### 36. Rebalancing-flow front-run + TOM overlay  [TOP — recent-lit sweep]
+- **Spec:** Harvey-Mazzoleni-Melone institutional rebalancing-flow signal from
+  SPY + ^TNX (month-end bond/equity relative-performance -> flow direction) +
+  turn-of-month timing. Sharpe ~1 net claimed (1997-2023). Full gates + haircut.
+### 37. Pre-FOMC drift book  [needs FOMC calendar data]
+- **Spec:** long SPY 24h pre-FOMC announcement; data-engineer: FOMC dates 1997+.
+### 38. Price-path convexity cross-section  [corr-gate vs core FIRST]
+- **Spec:** Gulen-Woeppel path-convexity sort, daily closes; kill if corr>0.4 to D.
+### 39. D core defense: industry-adjusted reversal + 4 upgrades
+- **Spec:** sector-relative scores (merges old #21), gap-vs-intraday filter,
+  vol-conditioned holds, MAX filter, PTH screen — one battery, anchor 2.740.
+### 40. D closing-auction entry tilt  [free; merges old #22]
+- **Spec:** shift D entries to closing auction (EOD loser rebound + cheapest venue).
+
 ## Done
 
 - **2026-08-17 | #33 rollback recalibration + RE-BASELINE — DONE**
