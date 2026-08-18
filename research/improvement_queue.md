@@ -9,9 +9,13 @@ angle; unread papers and untested ideas come first).
 
 ## Queue
 
-### 46. Earnings-calendar acquisition retry  [DATA — resumable]
-- **Spec:** fetch_earnings_dates.py is checkpoint/resume-ready; endpoint
-  intermittently rate-limited. Retry off-hours; then run
+### 46. Earnings-calendar acquisition retry  [DATA — yfinance route EXHAUSTED]
+- **Status 2026-08-17:** full 4.5h throttled run: 518/518 empty — the
+  per-ticker yfinance earnings endpoint is effectively closed to bulk use.
+- **Alternate source (preferred):** nasdaq.com per-DAY calendar API
+  (api.nasdaq.com/api/calendar/earnings?date=YYYY-MM-DD, needs browser UA):
+  one call per trading day, ~1900 calls for 2019-2026 window (~15 min at
+  0.5s spacing); filter to universe tickers. Then run
   cycle24_earnings_premium.py (Frazzini-Lamont gates pre-registered).
 
 ## Done
