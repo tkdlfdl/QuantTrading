@@ -20,6 +20,16 @@ angle; unread papers and untested ideas come first).
 
 ## Done
 
+- **2026-08-18 | Cycle 28: tiered-journal sweep (user list) — 5 candidates, 0 adoptions, 5 clean closures**
+  Intraday index momentum (JFE'18) dead at equity costs; Heston-Sadka
+  seasonality real but absorbed (+0.002); 52wk-high redundant with A/F
+  (corr F 0.48); BSC vol-scaled F halves standalone MaxDD but the portfolio
+  overlay already does the job (+0.019 p=0.251); GGR pairs long-dead
+  (-1.26, Do-Faff). Registry #149-154. The full-stack absorption pattern is
+  now the dominant kill mechanism: the champion's ivol+overlay machinery
+  replicates most published risk-management alpha internally.
+
+
 - **2026-08-17 | Cycle 27: ML next-day classification ladder — comprehensively REJECTED**
   User-directed program, pre-registered (brief ml_classification_2026-08):
   mu+/-k*sigma labels, walk-forward, no tuning. M1-M4 SPY (v1 + v2 with full
