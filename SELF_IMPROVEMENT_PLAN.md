@@ -62,7 +62,14 @@ their lessons back into the agents' own instruction files.
 
 ## 3. Cadence & trigger
 
-- **Weekly cycle** (recommended: Saturday, after Friday settle): steps 1–8.
+- **Twice-daily cycle** (user decision 2026-08-18; was weekly Saturday):
+  Windows tasks `ImprovementCycleAM` (06:00, pre-market — research/queue
+  work) and `ImprovementCyclePM` (19:00, after the 18:07 daily settle —
+  monitor first, then queue work): steps 1–8 each run. A run with an empty
+  queue and no monitor flags performs the literature-sweep refill or exits
+  cleanly — two runs/day must NOT lower the evidence bar (rule 4 unchanged;
+  ~14 cycles/week means MORE chances to overfit, so the significance gate
+  and perturbation requirements bind harder, not softer).
 - **Daily micro-monitor** (piggybacks run_daily): step 1 only — drift &
   rollback check, one line appended to `live/state/monitor_log.csv`.
 - Queue: `research/improvement_queue.md` — prioritized, each item has a spec
