@@ -24,51 +24,47 @@ rng = np.random.RandomState(0)
 
 daily = pd.read_parquet("data/cache/daily_close_extended_1997_2026.parquet")
 daily.index = pd.to_datetime(daily.index)
+daily = daily[daily.index >= "2001-06-01"]        # memory: trim early history
 stocks = [c for c in daily.columns if not c.startswith("^") and c not in {"UVXY"}]
 px = daily[stocks].ffill()
 ret = px.pct_change()
 jump = ret.abs().rolling(252).max()          # splice guard
 
-spy = daily["SPY"].dropna()
-spy_r = spy.pct_change()
-vix = daily["^VIX"].dropna() if "^VIX" in daily.columns else None
-
-# ---- per-stock feature blocks (v2: full technical-indicator set) ----
+# ---- per-stock feature blocks (v2, float32 numpy to fit memory) ----
 from ml_features import tech_features, market_features
-F = tech_features(px)
-F["rvrank"] = ret.rolling(5).sum().rank(axis=1, pct=True)   # 5d cross-sec rank
-F["momrank"] = px.pct_change(126).rank(axis=1, pct=True)    # cross-sec mom rank
-mu63 = ret.rolling(63).mean()
-sd63 = ret.rolling(63).std()
-
-# market context (broadcast)
+import gc
+Fdf = tech_features(px)
+Fdf["rvrank"] = ret.rolling(5).sum().rank(axis=1, pct=True)
+Fdf["momrank"] = px.pct_change(126).rank(axis=1, pct=True)
+FEAT_NAMES = list(Fdf.keys())
+Fnp = {k: v.to_numpy(dtype=np.float32) for k, v in Fdf.items()}
+del Fdf; gc.collect()
+mu63 = ret.rolling(63).mean().to_numpy(dtype=np.float32)
+sd63 = ret.rolling(63).std().to_numpy(dtype=np.float32)
+jump_np = jump.to_numpy(dtype=np.float32)
+rn_np = ret.shift(-1).to_numpy(dtype=np.float32)
 mk = market_features(px.index, daily, breadth_px=px).ffill()
-
-r_next = ret.shift(-1)
-FEATS = list(F.keys()) + list(mk.columns)
+mk_np = mk.to_numpy(dtype=np.float32)
+FEATS = FEAT_NAMES + list(mk.columns)
+gc.collect()
 
 from sklearn.ensemble import HistGradientBoostingClassifier
 
-def build_rows(date_mask):
-    """Stack (stock, day) rows for the masked dates. Returns X, y-dict, meta."""
-    idx = px.index[date_mask]
-    blocks = []
-    for d in idx:
-        ok = (sd63.loc[d] > 0) & ret.loc[d].notna() & (jump.loc[d] <= 1.0)
-        names = ok[ok].index
-        if len(names) < 50:
-            continue
-        row = np.column_stack(
-            [F[f].loc[d, names].values for f in F] +
-            [np.full(len(names), mk.loc[d, c]) for c in mk.columns])
-        rn = r_next.loc[d, names].values
-        m_, s_ = mu63.loc[d, names].values, sd63.loc[d, names].values
-        blocks.append((d, names, row, rn, m_, s_))
-    return blocks
-
 print("building row blocks...", flush=True)
-all_dates = (px.index >= "2001-01-01") & (px.index <= "2026-07-07")
-blocks = build_rows(all_dates)
+idx_all = px.index
+blocks = []
+for t in range(len(idx_all)):
+    d = idx_all[t]
+    if not (pd.Timestamp("2003-01-01") <= d <= pd.Timestamp("2026-07-07")):
+        continue
+    ok = ((sd63[t] > 0) & np.isfinite(rn_np[t]) & (jump_np[t] <= 1.0))
+    if ok.sum() < 50:
+        continue
+    row = np.column_stack(
+        [Fnp[f][t, ok] for f in FEAT_NAMES]
+        + [np.full(int(ok.sum()), mk_np[t, j], dtype=np.float32)
+           for j in range(mk_np.shape[1])])
+    blocks.append((d, ok, row, rn_np[t, ok], mu63[t, ok], sd63[t, ok]))
 print(f"{len(blocks)} usable days  ({time.time()-t0:.0f}s)", flush=True)
 
 for k in (1.0, 1.5, 2.0):
@@ -77,7 +73,7 @@ for k in (1.0, 1.5, 2.0):
     for oos_start in range(2012, 2027, 2):
         tr_lo, tr_hi = oos_start - 8, oos_start
         Xtr, ytr = [], []
-        for d, names, row, rn, m_, s_ in blocks:
+        for d, ok, row, rn, m_, s_ in blocks:
             if tr_lo <= d.year < tr_hi:
                 lab = np.where(rn > m_ + k * s_, 1, np.where(rn < m_ - k * s_, -1, 0))
                 keep = np.isfinite(rn) & np.isfinite(row).all(axis=1)
@@ -90,13 +86,13 @@ for k in (1.0, 1.5, 2.0):
             Xtr, ytr = Xtr[sel], ytr[sel]
         mdl = HistGradientBoostingClassifier(max_depth=6, random_state=0)
         mdl.fit(Xtr, ytr)
-        for d, names, row, rn, m_, s_ in blocks:
+        for d, ok, row, rn, m_, s_ in blocks:
             if not (oos_start <= d.year < oos_start + 2):
                 continue
             keep = np.isfinite(row).all(axis=1)
             if keep.sum() < 20:
                 continue
-            pred = np.zeros(len(names))
+            pred = np.zeros(row.shape[0])
             pred[keep] = mdl.predict(row[keep])
             lab = np.where(rn > m_ + k * s_, 1, np.where(rn < m_ - k * s_, -1, 0))
             n_pred += int(keep.sum()); n_hit += int((pred[keep] == lab[keep]).sum())

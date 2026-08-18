@@ -20,6 +20,16 @@ angle; unread papers and untested ideas come first).
 
 ## Done
 
+- **2026-08-17 | Cycle 27: ML next-day classification ladder — comprehensively REJECTED**
+  User-directed program, pre-registered (brief ml_classification_2026-08):
+  mu+/-k*sigma labels, walk-forward, no tuning. M1-M4 SPY (v1 + v2 with full
+  technical/VIX-TS/yields features): accuracy pinned at majority rate,
+  complexity hurts. M5 pooled panel HistGB (500k-row refits): -1.17/-0.52/
+  -0.41 after costs. Literature decay (Krauss 2017, Fischer-Krauss 2018)
+  confirmed in-house. Registry #148; sklearn now installed; ml_features.py
+  reusable. Thread closed absent a new feature class.
+
+
 - **2026-08-17 | #48 F-dip incubation STARTED (user decision) — 4th incubator live**
   Book FD wired: PARAMS["FD"] (mom_mask_top=50/750h, hold=40, raw ordering),
   replay_D mask branch, replay_all/BOOKS/eod flow-through. D8 anchor 1.836
