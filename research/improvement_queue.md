@@ -20,6 +20,16 @@ angle; unread papers and untested ideas come first).
 
 ## Done
 
+- **2026-08-18 | Cycle 29 (inline PM strategy cycle): M1-Stage-A COMPLETED — 0 adoptions**
+  Overnight-share ordering harmful both ways (D8 low: -0.115 p=0.007; D14
+  high: -0.060 p=0.041) despite real #133 cohort spreads — gap-composition
+  ranking trades away score depth. 8/8 pre-registered ordering features now
+  resolved; quiet sole winner; D-ordering axis closed. Registry #155.
+  Context: scheduled PM cycle did MONITOR/SELECT correctly but was killed at
+  the 600s ceiling pre-BUILD (ceiling now 45min); #46 data fetch running
+  detached (ETA ~22:25), FL test staged.
+
+
 - **2026-08-18 | Cycle 28: tiered-journal sweep (user list) — 5 candidates, 0 adoptions, 5 clean closures**
   Intraday index momentum (JFE'18) dead at equity costs; Heston-Sadka
   seasonality real but absorbed (+0.002); 52wk-high redundant with A/F
