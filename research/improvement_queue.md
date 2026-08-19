@@ -18,7 +18,24 @@ angle; unread papers and untested ideas come first).
   0.5s spacing); filter to universe tickers. Then run
   cycle24_earnings_premium.py (Frazzini-Lamont gates pre-registered).
 
+### 49. SEC Form-4 insider-purchase acquisition  [DATA — free class, unexploited]
+- **Spec:** EDGAR daily indexes -> Form 4 open-market BUYS by officers/directors;
+  Cohen-Malloy-Pomorski (JF 2012) opportunistic-vs-routine split. Multi-hour
+  scrape; unlocks insider-drift book (low corr to price factors).
+
+### 50. FINRA short-interest acquisition  [DATA — free class, unexploited]
+- **Spec:** FINRA bi-monthly equity SI files -> days-to-cover cross-section;
+  long-only LOW-SI tilt / high-SI avoidance screens (Rapach-Ringgenberg-Zhou).
+
 ## Done
+
+- **2026-08-19 | Cycle 33 (manual): first-ever F battery — raw spec survives, 0 adoptions**
+  Exact-copy anchor 1.0000 after v1 VOID (4 engine details missed). Tranching
+  helps standalone (+0.06, timing luck real) but champion absorbs it; risk-adj
+  and skip-week no better. F-refinement axis closed first-pass. #49 (Form-4
+  insiders) and #50 (FINRA short interest) queued as the remaining free data
+  classes. Registry #166-167.
+
 
 - **2026-08-18 | Cycle 32 (manual): spillover + weekly reversal — 0 adoptions, reversal map complete**
   JFQA-2025 peer spillover: both directions lose equally at hourly grain
