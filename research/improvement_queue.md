@@ -9,15 +9,6 @@ angle; unread papers and untested ideas come first).
 
 ## Queue
 
-### 46. Earnings-calendar acquisition retry  [DATA — yfinance route EXHAUSTED]
-- **Status 2026-08-17:** full 4.5h throttled run: 518/518 empty — the
-  per-ticker yfinance earnings endpoint is effectively closed to bulk use.
-- **Alternate source (preferred):** nasdaq.com per-DAY calendar API
-  (api.nasdaq.com/api/calendar/earnings?date=YYYY-MM-DD, needs browser UA):
-  one call per trading day, ~1900 calls for 2019-2026 window (~15 min at
-  0.5s spacing); filter to universe tickers. Then run
-  cycle24_earnings_premium.py (Frazzini-Lamont gates pre-registered).
-
 ### 49. SEC Form-4 insider-purchase acquisition  [DATA — free class, unexploited]
 - **Spec:** EDGAR daily indexes -> Form 4 open-market BUYS by officers/directors;
   Cohen-Malloy-Pomorski (JF 2012) opportunistic-vs-routine split. Multi-hour
@@ -28,6 +19,11 @@ angle; unread papers and untested ideas come first).
   long-only LOW-SI tilt / high-SI avoidance screens (Rapach-Ringgenberg-Zhou).
 
 ## Done
+
+- **2026-08-19 | #46 CLOSED: earnings calendar acquired (15,668 events) + both tests no-gain**
+  FL premium 0.58/-0.010; PEAD proxy 0.49/-0.045 — large-cap attenuation
+  confirmed in-house. Registry #172. Calendar = permanent asset.
+
 
 - **2026-08-19 | Cycle 35 (user idea): V-bottom rebound confirmation — all 8 cells rejected**
   Confirmation filter anti-selects (bear rallies fire the same signature);
