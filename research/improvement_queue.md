@@ -9,16 +9,15 @@ angle; unread papers and untested ideas come first).
 
 ## Queue
 
-### 49. SEC Form-4 insider-purchase acquisition  [DATA — free class, unexploited]
-- **Spec:** EDGAR daily indexes -> Form 4 open-market BUYS by officers/directors;
-  Cohen-Malloy-Pomorski (JF 2012) opportunistic-vs-routine split. Multi-hour
-  scrape; unlocks insider-drift book (low corr to price factors).
-
-### 50. FINRA short-interest acquisition  [DATA — free class, unexploited]
-- **Spec:** FINRA bi-monthly equity SI files -> days-to-cover cross-section;
-  long-only LOW-SI tilt / high-SI avoidance screens (Rapach-Ringgenberg-Zhou).
-
 ## Done
+
+- **2026-08-19 | Cycle 36: #49+#50 data classes acquired and tested — squeeze mechanism CONFIRMED, 0 adoptions**
+  Insider (252k buys) + SI (3.5M rows) permanent assets. Insider cluster 0.78
+  and low-SI 0.93 both real-but-absorbed. User's squeeze idea: high-SI
+  ignition 1.22/42% vs same-trigger low-SI control 0.66/16% — short-covering
+  fuel real (falsification passed) but corr 0.39 + stress -1.89%/d = absorbed
+  (+0.002). Registry #173-175. Free-data-class frontier now EXHAUSTED.
+
 
 - **2026-08-19 | #46 CLOSED: earnings calendar acquired (15,668 events) + both tests no-gain**
   FL premium 0.58/-0.010; PEAD proxy 0.49/-0.045 — large-cap attenuation
