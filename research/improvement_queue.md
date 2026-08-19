@@ -9,7 +9,56 @@ angle; unread papers and untested ideas come first).
 
 ## Queue
 
+### 51. Net-repurchaser tilt (realized net share issuance, long leg)  [rank 1 — data IN HAND]
+- **Spec:** brief `research/briefs/finance_sweep3_2026-08.md` C1 (registry #178-180).
+  iss = ln(S(t-5d)/S(t-5d-252d)) from shares_outstanding.parquet (split-adj,
+  first FINANCING use); month-end long bottom-50 (net repurchasers), EW.
+  Center cell pre-named: bottom-50 / 252d / monthly; grid {20,50}x{126,252}x
+  {monthly,quarterly}. FF08: net issuance is one of the ONLY big-cap-robust
+  anomalies — targets exactly our attenuation failure mode. Data-engineer
+  pre-step: verify parquet is dated per-ticker (not backfilled) + split
+  consistency (winsorize |iss|>0.5). FALSIFIED IF center stack delta <=0 or
+  p>=0.10, or alpha lives only in the issuer short leg.
+
+### 52. Buyback-authorization announcement drift (8-K events)  [rank 2 — free EDGAR full-text]
+- **Spec:** brief C2 (registry #181). EDGAR full-text search for new/expanded
+  repurchase authorizations in 8-Ks of our ~520 CIKs (2001+); enter next open
+  after filedAt (NEVER board-approval date in text); hold 63td, max 50 slots,
+  63d per-ticker cooldown. Pre-2010 all-cap literature — expect thin; report
+  D-complex entry-overlap diagnostic (the check that would have flagged #173
+  early). Complements #51: intent (fast) vs realized shrinkage (slow).
+
+### 53. Lazy Prices non-changer leg (10-K/Q text similarity)  [rank 3 — LOW PRIORITY, largest build]
+- **Spec:** brief C3 (registry #182). TF-IDF cosine similarity vs prior
+  same-type filing; long top-50 non-changers, enter after filedAt. Build ONLY
+  after #51/#52 verdicts (highest decay prior, alpha majority short-side).
+
 ## Done
+
+- **2026-08-19 | Cycle 39 (user idea): systematic short book — rejected; paid-insurance theorem established**
+  Hedge profile REAL (corr -0.35, stress +1.16%/d) but premium ~27%/yr ->
+  stack -0.154 p=0.006. Generalizes #124: negative-drift hedges never beat
+  the free overlay. Squeeze symmetry: shorts the #175 +42%/yr ignition
+  cohort from the wrong side. Registry #178-179.
+
+
+- **2026-08-19 | Cycle 38 (parallel AM run): #49-CMP empirical closure + finance sweep refill — 0 adoptions**
+  Ran concurrently with Cycle 36 (queue-collision: both selected #49; no claim
+  protocol existed — SELECT-claim rule added to SELF_IMPROVEMENT_PLAN). Own
+  Form-4 acquisition SUPERSET asset: form4_purchases.parquet (1.25M rows
+  2006-2026Q1, owner-level, filing+trans dates; use THIS for future insider
+  work, not cycle-36's insider_purchases.parquet 2018+). CMP opp-vs-routine
+  split tested EMPIRICALLY (registry #183 had rejected it by reasoning only):
+  opp 0.572/0.614 (full/2015+), corr(opp,all)=0.9991 — split adds +0.005
+  Sharpe (routine = ~5% of large-cap events); routine falsification arm
+  directionally consistent (0.203) but ~1.5 names = noise. DECISIVE: matched-
+  beta test FAIL (corr 0.95 to EW market, residual alpha -2.1 to -2.7%/yr
+  since 2015 — beta in disguise); stack delta -0.025 (v4) / +0.052 p=0.202
+  (champion) — fails 4b; significantly harmful at 0.5 sh (p=0.064). REJECT.
+  Recorded book_form4_cmp_opp (verifier PASS). Registry #189. Finance sweep
+  (#178-188) refilled queue with #51-53 (financing/disclosure class — the
+  last open free-data axis after positioning/attention closed).
+
 
 - **2026-08-19 | Cycle 36: #49+#50 data classes acquired and tested — squeeze mechanism CONFIRMED, 0 adoptions**
   Insider (252k buys) + SI (3.5M rows) permanent assets. Insider cluster 0.78
