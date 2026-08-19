@@ -29,6 +29,13 @@ angle; unread papers and untested ideas come first).
 
 ## Done
 
+- **2026-08-19 | Cycle 34 (user idea): index dip-buying + FOMC-drop — all 9 cells rejected**
+  Index dips cluster in crashes (QQQ -3%: 0.05/-83%); FOMC-drop too thin (22
+  events); hourly variant negative. Decisive complement to #126: D's edge =
+  intraday frequency x CROSS-SECTIONAL selection — index-level removes the
+  selection dimension and the mechanism dies. Registry #168-169.
+
+
 - **2026-08-19 | Cycle 33 (manual): first-ever F battery — raw spec survives, 0 adoptions**
   Exact-copy anchor 1.0000 after v1 VOID (4 engine details missed). Tranching
   helps standalone (+0.06, timing luck real) but champion absorbs it; risk-adj
