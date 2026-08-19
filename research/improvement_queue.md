@@ -20,6 +20,14 @@ angle; unread papers and untested ideas come first).
 
 ## Done
 
+- **2026-08-18 | Cycle 32 (manual): spillover + weekly reversal — 0 adoptions, reversal map complete**
+  JFQA-2025 peer spillover: both directions lose equally at hourly grain
+  (control falsification) — cost floor >> diffusion effect. Weekly
+  sector-neutral reversal real standalone (0.89) but absorbed. Reversal now
+  closed at every horizon; D's hourly moat is the only one that pays.
+  Registry #163-165.
+
+
 - **2026-08-18 | Cycle 31 (manual): crisis-alpha + rare-event tactical — 0 adoptions**
   TSMOM defensive: no crisis alpha in 2022 (trends broke with equities),
   stack -0.015. Breadth thrust: bear-rally false positives (-35% in 2022),
