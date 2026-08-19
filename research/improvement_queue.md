@@ -20,6 +20,14 @@ angle; unread papers and untested ideas come first).
 
 ## Done
 
+- **2026-08-18 | Cycle 30 (manual, user-directed champion hunt): 3 absent premium classes — 0 adoptions**
+  Volume/attention premium real but absorbed; short-VIX ETP rejected (gate
+  inverts the premium; VIX-ETP class closed both directions); deep-drawdown
+  stabilization recovery = best profile (corr 0.16, 1.39 post-2022, +0.025
+  p=0.248) -> watch list. Registry #156-159. Chained-indexing lesson written
+  to quant-developer (3rd occurrence).
+
+
 - **2026-08-18 | Cycle 29 (inline PM strategy cycle): M1-Stage-A COMPLETED — 0 adoptions**
   Overnight-share ordering harmful both ways (D8 low: -0.115 p=0.007; D14
   high: -0.060 p=0.041) despite real #133 cohort spreads — gap-composition

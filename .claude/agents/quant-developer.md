@@ -112,3 +112,7 @@ data turned out underspecified, route back to `researcher` / `data-engineer`.
   too — a custom entry/exit loop must first reproduce the baseline with the
   baseline's exit (fixed hold) before testing the new exit. A -0.9 delta with
   no anchor is a harness indictment, not an idea verdict.
+- **Chained-indexing writes to a COPY (3 VOIDed tests: sector reversal v1, cycle-30 A & C).**
+  `df.iloc[i][cols] = x` and `df.iloc[a:b][cols] = x` silently do nothing.
+  Always use positional column indexers: `df.iloc[i, [df.columns.get_loc(c) for c in cols]] = x`.
+  The tell is an all-zero return series (NaN Sharpe) — if you see it, suspect this first.
