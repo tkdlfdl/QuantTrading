@@ -29,6 +29,12 @@ angle; unread papers and untested ideas come first).
 
 ## Done
 
+- **2026-08-19 | Cycle 35 (user idea): V-bottom rebound confirmation — all 8 cells rejected**
+  Confirmation filter anti-selects (bear rallies fire the same signature);
+  worse than naive dips. Index-timing axis closed under 3 signal families.
+  Registry #170-171.
+
+
 - **2026-08-19 | Cycle 34 (user idea): index dip-buying + FOMC-drop — all 9 cells rejected**
   Index dips cluster in crashes (QQQ -3%: 0.05/-83%); FOMC-drop too thin (22
   events); hourly variant negative. Decisive complement to #126: D's edge =
