@@ -204,7 +204,22 @@ def refresh_etf_daily(verbose=True) -> bool:
         raw = yf.download(etfs, start="2002-01-01", interval="1d",
                           auto_adjust=True, progress=False)["Close"]
         raw.index = _pd.to_datetime(raw.index).tz_localize(None)
-        raw.to_parquet(C.CACHE_DIR / "etf_daily_close.parquet")
+        # NEVER overwrite good data with worse data (2026-08-18 incident: a
+        # network outage returned an EMPTY download and this function wiped
+        # the cache, crashing replay_X and the whole settle).
+        path = C.CACHE_DIR / "etf_daily_close.parquet"
+        if raw.shape[0] < 1000:
+            if verbose:
+                print(f"  [prepare] ETF refresh returned {raw.shape[0]} rows — "
+                      "REFUSING to overwrite cache.")
+            return False
+        if path.exists():
+            old = _pd.read_parquet(path)
+            if len(old) and _pd.to_datetime(old.index).max() > raw.index.max():
+                if verbose:
+                    print("  [prepare] ETF refresh older than cache — keeping cache.")
+                return False
+        raw.to_parquet(path)
         if verbose:
             print(f"  [prepare] ETF daily cache refreshed ({raw.shape[0]} rows).")
         return True

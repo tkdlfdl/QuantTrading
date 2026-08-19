@@ -497,6 +497,10 @@ def replay_X(panels):
     raw = pd.read_parquet(path)
     raw.index = pd.to_datetime(raw.index)
     raw = raw[[t for t in p["etf_universe"] if t in raw.columns]]
+    if len(raw) < 300:
+        # fail-soft: a starved/corrupt cache must not kill the whole settle
+        print(f"  [settle] Book X cache has {len(raw)} rows -> X skipped this run")
+        return pd.Series(dtype=float), [], []
     r = raw.pct_change()
     mom = raw.pct_change(p["mom_lookback_days"]).shift(p["mom_skip_days"])
     month_end = raw.index.to_series().dt.month.diff().fillna(1) != 0
