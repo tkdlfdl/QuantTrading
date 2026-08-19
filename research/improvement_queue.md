@@ -20,6 +20,13 @@ angle; unread papers and untested ideas come first).
 
 ## Done
 
+- **2026-08-18 | Cycle 31 (manual): crisis-alpha + rare-event tactical — 0 adoptions**
+  TSMOM defensive: no crisis alpha in 2022 (trends broke with equities),
+  stack -0.015. Breadth thrust: bear-rally false positives (-35% in 2022),
+  stack +0.021 p=0.302. Registry #160-162. Earnings acquisition ~85% —
+  FL premium + earnings-day-reaction drift tests fire on completion.
+
+
 - **2026-08-18 | Cycle 30 (manual, user-directed champion hunt): 3 absent premium classes — 0 adoptions**
   Volume/attention premium real but absorbed; short-VIX ETP rejected (gate
   inverts the premium; VIX-ETP class closed both directions); deep-drawdown
